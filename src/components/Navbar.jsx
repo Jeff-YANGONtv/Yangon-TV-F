@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaFilm, FaTv, FaInfoCircle } from 'react-icons/fa';
+import { FaHome, FaFilm, FaTv, FaInfoCircle, FaLink } from 'react-icons/fa';
 
 export default function Navbar() {
   const location = useLocation();
@@ -8,6 +8,7 @@ export default function Navbar() {
     { path: '/', icon: FaHome, label: 'Home' },
     { path: '/movies', icon: FaFilm, label: 'Movies' },
     { path: '/series', icon: FaTv, label: 'Series' },
+    { path: '/links', icon: FaLink, label: 'Links' },
     { path: '/about', icon: FaInfoCircle, label: 'About Us' },
   ];
 
@@ -17,12 +18,12 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="text-2xl font-bold text-red-500">
+        <Link to="/" className="text-2xl font-bold text-red-500 tracking-wide">
           YGNTV
         </Link>
 
-        {/* Icon Navigation */}
-        <div className="flex gap-10 items-center">
+        {/* Icon-Only Navigation */}
+        <div className="flex gap-6 sm:gap-8 md:gap-10 items-center">
           {navItems.map(({ path, icon: Icon, label }) => (
             <Link
               key={path}
