@@ -158,26 +158,28 @@ export default function SeriesDetail() {
                         >
                           <span className="text-sm text-gray-300">{episode.name}</span>
                           <div className="flex items-center gap-2">
-                            {episode.streaming_links?.length > 0 && (
+                            {episode.streaming_links?.length > 0 && episode.streaming_links.map((link, i) => (
                               <a
-                                href={episode.streaming_links[0]}
+                                key={`stream-${i}`}
+                                href={link}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors"
                               >
-                                Watch
+                                Watch {episode.streaming_links.length > 1 ? i + 1 : ''}
                               </a>
-                            )}
-                            {episode.download_links?.length > 0 && (
+                            ))}
+                            {episode.download_links?.length > 0 && episode.download_links.map((link, i) => (
                               <a
-                                href={episode.download_links[0]}
+                                key={`down-${i}`}
+                                href={link}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="px-3 py-1 bg-[#1a1a1a] border border-gray-700 hover:border-red-500 text-white text-xs font-medium rounded-lg transition-colors"
                               >
-                                Download
+                                Download {episode.download_links.length > 1 ? i + 1 : ''}
                               </a>
-                            )}
+                            ))}
                           </div>
                         </div>
                       ))}

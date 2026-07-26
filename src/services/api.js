@@ -29,7 +29,7 @@ const unwrap = (res) => {
 export const moviesApi = {
   list: (page = 1) => client.get('/movies', { params: { p: page } }).then(unwrap),
   detail: (id) => client.get(`/movies/${id}`).then(unwrap),
-  search: (query) => client.get('/movies/search', { params: { q: query } }).then(unwrap),
+  search: (query) => client.get('/movies/search', { params: { query: query } }).then(unwrap),
   filter: (params) => client.get('/movies/filter', { params }).then(unwrap),
 };
 
