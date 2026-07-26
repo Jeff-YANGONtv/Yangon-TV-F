@@ -123,8 +123,11 @@ export default function SeriesWatch() {
   }
 
   const title = searchParams.get('title') || 'Episode';
+
+  // Determine rendering mode
   const youtubeEmbedUrl = streamData.type === 'youtube' ? getYouTubeEmbedUrl(streamData.src) : null;
-  const isNStream = streamData.type === 'nstream';
+  const isDirect = streamData.type === 'direct';
+  const isIframeEmbed = streamData.type === 'nstream' || streamData.type === 'iframe';
 
   const episodeLinks = findEpisodeLinks(show, streamEncoded);
   const episodeDownloads = findEpisodeDownloads(show, streamEncoded);
@@ -133,12 +136,13 @@ export default function SeriesWatch() {
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Video Container */}
       <div className="bg-black rounded-lg overflow-hidden shadow-2xl mb-6">
-        {youtubeEmbedUrl || isNStream ? (
+        {youtubeEmbedUrl ? (
+          // YouTube embed
           <div className="aspect-video">
             <iframe
               width="100%"
               height="100%"
-              src={youtubeEmbedUrl || streamData.src}
+              src={youtubeEmbedUrl}
               title={title}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -146,17 +150,30 @@ export default function SeriesWatch() {
               className="w-full h-full"
             />
           </div>
+        ) : isIframeEmbed ? (
+          // nstream or iframe — render the full raw HTML from backend
+          <div
+            className="aspect-video [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
+            dangerouslySetInnerHTML={{ __html: streamData.raw }}
+          />
+        ) : isDirect ? (
+          // Direct video file
+          <div className="aspect-video">
+            <video
+              width="100%"
+              height="100%"
+              controls
+              autoPlay
+              className="w-full h-full bg-black"
+            >
+              <source src={streamData.src} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
         ) : (
-          <video
-            width="100%"
-            height="100%"
-            controls
-            autoPlay
-            className="w-full h-full bg-black"
-          >
-            <source src={streamData.src} type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+          <div className="aspect-video bg-gray-800 flex items-center justify-center">
+            <p className="text-gray-400">Unsupported video format</p>
+          </div>
         )}
       </div>
 
@@ -166,7 +183,7 @@ export default function SeriesWatch() {
           {title}
         </h1>
         <p className="text-gray-400 text-sm">
-          {youtubeEmbedUrl ? 'Playing from YouTube' : isNStream ? 'Playing from nstream' : 'Playing from direct source'}
+          {youtubeEmbedUrl ? 'Playing from YouTube' : streamData.type === 'nstream' ? 'Playing from nstream' : streamData.type === 'iframe' ? 'Playing from embed' : 'Playing from direct source'}
         </p>
       </div>
 
