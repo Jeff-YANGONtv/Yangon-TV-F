@@ -1,2 +1,3 @@
 # Yangon TV FRONT-END 
-** Designed & Developed using React & Tailwind CSS by Daddy Jeff **
+## Designed & Developed using React & Tailwind CSS by Daddy Jeff
+
