@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { moviesApi, resolveMediaUrl } from '../services/api';
 import { toSlugWithId, extractIdFromSlug } from '../utils/slug';
+import { encodeStreamLink } from '../utils/streamLink';
 import AdBanner from '../components/AdBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
@@ -135,7 +136,7 @@ export default function MovieDetail() {
                 {movie.streaming_links.map((link, i) => (
                   <button
                     key={i}
-                    onClick={() => navigate(`/movies/${movieSlug}/watch?url=${encodeURIComponent(link)}&title=${encodeURIComponent(movie.name)}&linkIndex=${i}`)}
+                    onClick={() => navigate(`/movies/${movieSlug}/watch?stream=${encodeURIComponent(encodeStreamLink(link))}&title=${encodeURIComponent(movie.name)}&linkIndex=${i}`)}
                     className="btn-3d text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

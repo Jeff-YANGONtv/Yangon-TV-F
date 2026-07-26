@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { showsApi } from '../services/api';
-import { toSlugWithId, extractIdFromSlug } from '../utils/slug';
+import { extractIdFromSlug } from '../utils/slug';
+import { encodeStreamLink, decodeStreamLink, getYouTubeEmbedUrl } from '../utils/streamLink';
 
 /**
  * SeriesWatch — Embedded video player for a series episode
  * Route: /series/{slug}/watch
- * Query params: url, title, linkIndex
+ * Query params: stream (encoded stream link), title, linkIndex
  */
 export default function SeriesWatch() {
   const { slug } = useParams();
@@ -15,7 +16,7 @@ export default function SeriesWatch() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const videoUrl = searchParams.get('url');
+  const streamEncoded = searchParams.get('stream');
   const linkIndex = parseInt(searchParams.get('linkIndex') || '0', 10);
 
   useEffect(() => {
@@ -40,57 +41,41 @@ export default function SeriesWatch() {
     fetchDetail();
   }, [slug]);
 
-  // Determine if URL is YouTube
-  const isYouTube = (url) => {
-    if (!url) return false;
-    return url.includes('youtube.com') || url.includes('youtu.be');
-  };
+  // Decode the stream link
+  const streamData = decodeStreamLink(streamEncoded);
 
-  // Determine if URL is nstream.cc
-  const isNStream = (url) => {
-    if (!url) return false;
-    return url.includes('nstream.cc');
-  };
-
-  // Extract YouTube video ID
-  const getYouTubeEmbedUrl = (url) => {
-    if (!url) return null;
-    if (url.includes('youtu.be/')) {
-      const videoId = url.split('youtu.be/')[1].split('?')[0];
-      return `https://www.youtube.com/embed/${videoId}`;
-    }
-    if (url.includes('youtube.com/watch?v=')) {
-      const videoId = url.split('v=')[1].split('&')[0];
-      return `https://www.youtube.com/embed/${videoId}`;
-    }
-    if (url.includes('youtube.com/embed/')) {
-      return url;
-    }
-    return null;
-  };
-
-  // Find the episode that contains this video URL for link switching
-  const findEpisodeLinks = (showData, targetUrl) => {
-    if (!showData?.seasons) return [];
+  // Find download links for the same episode
+  const findEpisodeDownloads = (showData, targetLink) => {
+    if (!showData?.seasons || !targetLink) return [];
+    const targetSrc = decodeStreamLink(targetLink)?.src;
+    if (!targetSrc) return [];
     for (const season of showData.seasons) {
       if (!season.episodes) continue;
       for (const episode of season.episodes) {
-        if (episode.streaming_links?.includes(targetUrl)) {
-          return episode.streaming_links;
+        if (episode.streaming_links?.some(l => {
+          const parsed = decodeStreamLink(l);
+          return parsed?.src === targetSrc;
+        })) {
+          return episode.download_links || [];
         }
       }
     }
     return [];
   };
 
-  // Find download links for the same episode
-  const findEpisodeDownloads = (showData, targetUrl) => {
-    if (!showData?.seasons) return [];
+  // Find all episode links for link switching
+  const findEpisodeLinks = (showData, targetLink) => {
+    if (!showData?.seasons || !targetLink) return [];
+    const targetSrc = decodeStreamLink(targetLink)?.src;
+    if (!targetSrc) return [];
     for (const season of showData.seasons) {
       if (!season.episodes) continue;
       for (const episode of season.episodes) {
-        if (episode.streaming_links?.includes(targetUrl)) {
-          return episode.download_links || [];
+        if (episode.streaming_links?.some(l => {
+          const parsed = decodeStreamLink(l);
+          return parsed?.src === targetSrc;
+        })) {
+          return episode.streaming_links;
         }
       }
     }
@@ -123,12 +108,12 @@ export default function SeriesWatch() {
     );
   }
 
-  if (!videoUrl) {
+  if (!streamData) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="bg-red-500/20 border border-red-500 rounded-lg p-6 text-center">
-          <h1 className="text-2xl font-bold text-red-500 mb-2">No Video URL</h1>
-          <p className="text-gray-300 mb-4">No streaming link was provided.</p>
+          <h1 className="text-2xl font-bold text-red-500 mb-2">Invalid Stream Link</h1>
+          <p className="text-gray-300 mb-4">The video URL could not be decoded.</p>
           <Link to={`/series/${slug}`} className="text-red-500 hover:text-red-400 transition-colors">
             ← Back to Series
           </Link>
@@ -138,22 +123,22 @@ export default function SeriesWatch() {
   }
 
   const title = searchParams.get('title') || 'Episode';
-  const youtubeEmbedUrl = isYouTube(videoUrl) ? getYouTubeEmbedUrl(videoUrl) : null;
-  const nstreamUrl = isNStream(videoUrl) ? videoUrl : null;
+  const youtubeEmbedUrl = streamData.type === 'youtube' ? getYouTubeEmbedUrl(streamData.src) : null;
+  const isNStream = streamData.type === 'nstream';
 
-  const episodeLinks = findEpisodeLinks(show, videoUrl);
-  const episodeDownloads = findEpisodeDownloads(show, videoUrl);
+  const episodeLinks = findEpisodeLinks(show, streamEncoded);
+  const episodeDownloads = findEpisodeDownloads(show, streamEncoded);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Video Container */}
       <div className="bg-black rounded-lg overflow-hidden shadow-2xl mb-6">
-        {youtubeEmbedUrl || nstreamUrl ? (
+        {youtubeEmbedUrl || isNStream ? (
           <div className="aspect-video">
             <iframe
               width="100%"
               height="100%"
-              src={youtubeEmbedUrl || nstreamUrl}
+              src={youtubeEmbedUrl || streamData.src}
               title={title}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -169,7 +154,7 @@ export default function SeriesWatch() {
             autoPlay
             className="w-full h-full bg-black"
           >
-            <source src={videoUrl} type="video/mp4" />
+            <source src={streamData.src} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         )}
@@ -181,7 +166,7 @@ export default function SeriesWatch() {
           {title}
         </h1>
         <p className="text-gray-400 text-sm">
-          {youtubeEmbedUrl ? 'Playing from YouTube' : isNStream(videoUrl) ? 'Playing from nstream' : 'Playing from direct source'}
+          {youtubeEmbedUrl ? 'Playing from YouTube' : isNStream ? 'Playing from nstream' : 'Playing from direct source'}
         </p>
       </div>
 
@@ -193,7 +178,7 @@ export default function SeriesWatch() {
             {episodeLinks.map((link, i) => (
               <Link
                 key={i}
-                to={`/series/${slug}/watch?url=${encodeURIComponent(link)}&title=${encodeURIComponent(title)}&linkIndex=${i}`}
+                to={`/series/${slug}/watch?stream=${encodeURIComponent(encodeStreamLink(link))}&title=${encodeURIComponent(title)}&linkIndex=${i}`}
                 className={`text-xs sm:text-sm px-4 sm:px-5 py-2 rounded-lg transition-all ${
                   i === linkIndex
                     ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'

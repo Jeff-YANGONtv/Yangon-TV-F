@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { moviesApi } from '../services/api';
-import { toSlugWithId, extractIdFromSlug } from '../utils/slug';
+import { extractIdFromSlug } from '../utils/slug';
+import { encodeStreamLink, decodeStreamLink, getYouTubeEmbedUrl } from '../utils/streamLink';
 
 /**
  * MovieWatch — Embedded video player for a movie
  * Route: /movies/{slug}/watch
- * Query params: url, title, linkIndex
+ * Query params: stream (encoded stream link), title, linkIndex
  */
 export default function MovieWatch() {
   const { slug } = useParams();
@@ -15,7 +16,7 @@ export default function MovieWatch() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const videoUrl = searchParams.get('url');
+  const streamEncoded = searchParams.get('stream');
   const linkIndex = parseInt(searchParams.get('linkIndex') || '0', 10);
 
   useEffect(() => {
@@ -40,34 +41,8 @@ export default function MovieWatch() {
     fetchDetail();
   }, [slug]);
 
-  // Determine if URL is YouTube
-  const isYouTube = (url) => {
-    if (!url) return false;
-    return url.includes('youtube.com') || url.includes('youtu.be');
-  };
-
-  // Determine if URL is nstream.cc
-  const isNStream = (url) => {
-    if (!url) return false;
-    return url.includes('nstream.cc');
-  };
-
-  // Extract YouTube video ID
-  const getYouTubeEmbedUrl = (url) => {
-    if (!url) return null;
-    if (url.includes('youtu.be/')) {
-      const videoId = url.split('youtu.be/')[1].split('?')[0];
-      return `https://www.youtube.com/embed/${videoId}`;
-    }
-    if (url.includes('youtube.com/watch?v=')) {
-      const videoId = url.split('v=')[1].split('&')[0];
-      return `https://www.youtube.com/embed/${videoId}`;
-    }
-    if (url.includes('youtube.com/embed/')) {
-      return url;
-    }
-    return null;
-  };
+  // Decode the stream link
+  const streamData = decodeStreamLink(streamEncoded);
 
   if (loading) {
     return (
@@ -95,12 +70,12 @@ export default function MovieWatch() {
     );
   }
 
-  if (!videoUrl) {
+  if (!streamData) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="bg-red-500/20 border border-red-500 rounded-lg p-6 text-center">
-          <h1 className="text-2xl font-bold text-red-500 mb-2">No Video URL</h1>
-          <p className="text-gray-300 mb-4">No streaming link was provided.</p>
+          <h1 className="text-2xl font-bold text-red-500 mb-2">Invalid Stream Link</h1>
+          <p className="text-gray-300 mb-4">The video URL could not be decoded.</p>
           <Link to={`/movies/${slug}`} className="text-red-500 hover:text-red-400 transition-colors">
             ← Back to Movie
           </Link>
@@ -110,8 +85,8 @@ export default function MovieWatch() {
   }
 
   const title = searchParams.get('title') || movie?.name || 'Video Player';
-  const youtubeEmbedUrl = isYouTube(videoUrl) ? getYouTubeEmbedUrl(videoUrl) : null;
-  const nstreamUrl = isNStream(videoUrl) ? videoUrl : null;
+  const youtubeEmbedUrl = streamData.type === 'youtube' ? getYouTubeEmbedUrl(streamData.src) : null;
+  const isNStream = streamData.type === 'nstream';
 
   // Check if there are other streaming links to switch between
   const allLinks = movie?.streaming_links || [];
@@ -120,12 +95,12 @@ export default function MovieWatch() {
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Video Container */}
       <div className="bg-black rounded-lg overflow-hidden shadow-2xl mb-6">
-        {youtubeEmbedUrl || nstreamUrl ? (
+        {youtubeEmbedUrl || isNStream ? (
           <div className="aspect-video">
             <iframe
               width="100%"
               height="100%"
-              src={youtubeEmbedUrl || nstreamUrl}
+              src={youtubeEmbedUrl || streamData.src}
               title={title}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -141,7 +116,7 @@ export default function MovieWatch() {
             autoPlay
             className="w-full h-full bg-black"
           >
-            <source src={videoUrl} type="video/mp4" />
+            <source src={streamData.src} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         )}
@@ -153,7 +128,7 @@ export default function MovieWatch() {
           {title}
         </h1>
         <p className="text-gray-400 text-sm">
-          {youtubeEmbedUrl ? 'Playing from YouTube' : isNStream(videoUrl) ? 'Playing from nstream' : 'Playing from direct source'}
+          {youtubeEmbedUrl ? 'Playing from YouTube' : isNStream ? 'Playing from nstream' : 'Playing from direct source'}
         </p>
       </div>
 
@@ -165,7 +140,7 @@ export default function MovieWatch() {
             {allLinks.map((link, i) => (
               <Link
                 key={i}
-                to={`/movies/${slug}/watch?url=${encodeURIComponent(link)}&title=${encodeURIComponent(title)}&linkIndex=${i}`}
+                to={`/movies/${slug}/watch?stream=${encodeURIComponent(encodeStreamLink(link))}&title=${encodeURIComponent(title)}&linkIndex=${i}`}
                 className={`text-xs sm:text-sm px-4 sm:px-5 py-2 rounded-lg transition-all ${
                   i === linkIndex
                     ? 'bg-red-500 text-white shadow-lg shadow-red-500/30'
