@@ -18,8 +18,10 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="text-2xl font-bold text-red-500 tracking-wide">
-          YGNTV
+        <Link to="/" className="flex items-center gap-2">
+          <span className="text-2xl font-extrabold text-red-500 tracking-tighter">
+            YANGON <span className="text-white">TV</span>
+          </span>
         </Link>
 
         {/* Icon-Only Navigation */}
