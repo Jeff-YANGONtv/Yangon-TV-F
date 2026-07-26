@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { moviesApi, showsApi, resolveMediaUrl } from '../services/api';
+import { moviesApi, showsApi, sortedMoviesApi, resolveMediaUrl } from '../services/api';
 import AdBanner from '../components/AdBanner';
 import MovieCard from '../components/MovieCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -20,13 +20,13 @@ export default function Home() {
     async function fetchData() {
       try {
         setLoading(true);
-        const [recentRes, moviesRes, seriesRes] = await Promise.all([
+        const [recentRes, popularRes, seriesRes] = await Promise.all([
           moviesApi.list(1),
-          moviesApi.list(1),
+          sortedMoviesApi.list(1, 'views', 'desc'),
           showsApi.list(1),
         ]);
         setRecentMovies(recentRes.data || []);
-        setPopularMovies(moviesRes.data || []);
+        setPopularMovies(popularRes.data || []);
         setPopularSeries(seriesRes.data || []);
       } catch (err) {
         setError(err);

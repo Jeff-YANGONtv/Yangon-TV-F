@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { showsApi } from '../services/api';
+import { showsApi, genresApi, resolveMediaUrl } from '../services/api';
 import MovieCard from '../components/MovieCard';
 import AdBanner from '../components/AdBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
-
-const PER_PAGE = 12;
 
 export default function Shows() {
   const [shows, setShows] = useState([]);
@@ -22,7 +20,12 @@ export default function Shows() {
     try {
       setLoading(true);
       setError(null);
-      const res = await showsApi.list(page);
+      let res;
+      if (searchQuery.trim()) {
+        res = await showsApi.search(searchQuery.trim());
+      } else {
+        res = await showsApi.list(page);
+      }
       const items = res.data || [];
       setShows(items);
       setTotalPages(res.last_page || 1);
@@ -32,27 +35,35 @@ export default function Shows() {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, searchQuery]);
+
+  // Fetch genres from API
+  const fetchGenres = useCallback(async () => {
+    try {
+      const res = await genresApi.list();
+      const items = res.data || [];
+      if (Array.isArray(items) && items.length > 0) {
+        const genreNames = items.map((g) => g.name).filter(Boolean);
+        setGenres(['All', ...genreNames]);
+      }
+    } catch (err) {
+      // Fallback: extract from loaded shows
+      console.warn('Failed to fetch genres from API, extracting from shows.');
+    }
+  }, []);
 
   useEffect(() => {
     fetchShows();
   }, [fetchShows]);
 
-  // Extract genres
   useEffect(() => {
-    if (shows.length > 0) {
-      const genreSet = new Set();
-      shows.forEach((s) => {
-        if (s.genres && Array.isArray(s.genres)) {
-          s.genres.forEach((g) => genreSet.add(g));
-        }
-      });
-      setGenres(['All', ...Array.from(genreSet)]);
-    }
-  }, [shows]);
+    fetchGenres();
+  }, [fetchGenres]);
 
   const handleGenreClick = (genre) => {
     setActiveGenre(genre);
+    setSearchQuery('');
+    setPage(1);
   };
 
   const filteredShows = activeGenre === 'All'

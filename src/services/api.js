@@ -37,6 +37,19 @@ export const moviesApi = {
 export const showsApi = {
   list: (page = 1) => client.get('/shows', { params: { p: page } }).then(unwrap),
   detail: (id) => client.get(`/shows/${id}`).then(unwrap),
+  search: (query) => client.get('/shows/search', { params: { query: query } }).then(unwrap),
+  filter: (params) => client.get('/shows/filter', { params }).then(unwrap),
+};
+
+// --- Movies (sorted by views/date) ---
+export const sortedMoviesApi = {
+  list: (page = 1, sortBy = 'views', sortOrder = 'desc') =>
+    client.get('/movies/paginate-sorted', { params: { p: page, sort_by: sortBy, sort_order: sortOrder, per_page: 20 } }).then(unwrap),
+};
+
+// --- Genres ---
+export const genresApi = {
+  list: () => client.get('/genres').then(unwrap),
 };
 
 // --- Ads ---
