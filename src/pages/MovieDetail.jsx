@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { moviesApi, resolveMediaUrl } from '../services/api';
 import AdBanner from '../components/AdBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -8,6 +8,7 @@ import MovieCard from '../components/MovieCard';
 
 export default function MovieDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [movie, setMovie] = useState(null);
   const [relatedMovies, setRelatedMovies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -116,12 +117,10 @@ export default function MovieDetail() {
             {movie.streaming_links?.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {movie.streaming_links.map((link, i) => (
-                  <a
+                  <button
                     key={i}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    onClick={() => navigate(`/player?url=${encodeURIComponent(link)}&title=${encodeURIComponent(movie.name)}&type=movie&id=${id}`)}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
                   >
                     <span className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -129,7 +128,7 @@ export default function MovieDetail() {
                       </svg>
                       Watch #{i + 1}
                     </span>
-                  </a>
+                  </button>
                 ))}
               </div>
             ) : (

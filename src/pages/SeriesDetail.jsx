@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { showsApi, resolveMediaUrl } from '../services/api';
 import AdBanner from '../components/AdBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -8,6 +8,7 @@ import MovieCard from '../components/MovieCard';
 
 export default function SeriesDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [show, setShow] = useState(null);
   const [expandedSeason, setExpandedSeason] = useState(null);
   const [relatedShows, setRelatedShows] = useState([]);
@@ -159,15 +160,13 @@ export default function SeriesDetail() {
                           <span className="text-sm text-gray-300">{episode.name}</span>
                           <div className="flex items-center gap-2">
                             {episode.streaming_links?.length > 0 && episode.streaming_links.map((link, i) => (
-                              <a
+                              <button
                                 key={`stream-${i}`}
-                                href={link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors"
+                                onClick={() => navigate(`/player?url=${encodeURIComponent(link)}&title=${encodeURIComponent(episode.name)}&type=series&id=${id}`)}
+                                className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
                               >
                                 Watch {episode.streaming_links.length > 1 ? i + 1 : ''}
-                              </a>
+                              </button>
                             ))}
                             {episode.download_links?.length > 0 && episode.download_links.map((link, i) => (
                               <a

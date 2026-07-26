@@ -9,6 +9,7 @@ import Shows from './pages/Shows'
 import SeriesDetail from './pages/SeriesDetail'
 import About from './pages/About'
 import Links from './pages/Links'
+import VideoPlayer from './pages/VideoPlayer'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/series/:id" element={<SeriesDetail />} />
           <Route path="/links" element={<Links />} />
           <Route path="/about" element={<About />} />
+          <Route path="/player" element={<VideoPlayer />} />
         </Routes>
       </main>
       <Footer />
