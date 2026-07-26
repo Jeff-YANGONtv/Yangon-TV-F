@@ -52,25 +52,27 @@ export default function SeriesDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-4">
       {/* Series Detail Content */}
-      <div className="flex flex-col md:flex-row gap-6 p-4 md:p-6">
+      <div className="flex flex-col md:flex-row gap-6 p-4 md:p-6 glass-morphism rounded-2xl">
         {/* Poster */}
-        <div className="shrink-0">
+        <div className="shrink-0 flex justify-center md:justify-start">
           <img
             src={resolveMediaUrl(show.poster) || '/placeholder-poster.png'}
             alt={show.name}
-            className="w-64 md:w-72 aspect-[2/3] object-cover rounded-xl shadow-2xl"
+            className="w-48 sm:w-56 md:w-64 lg:w-72 aspect-[2/3] object-cover rounded-xl shadow-2xl hover:shadow-red-500/50 transition-shadow duration-300"
             onError={(e) => { e.target.src = '/placeholder-poster.png'; }}
           />
         </div>
 
         {/* Details */}
         <div className="flex-1 space-y-4">
-          <h1 className="text-2xl md:text-3xl font-bold">{show.name}</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-500 to-red-400 bg-clip-text text-transparent">
+            {show.name}
+          </h1>
 
           {/* Meta row */}
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400">
+          <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-400">
             {show.release_date && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 px-3 py-1 glass-morphism-dark rounded-full">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -78,7 +80,7 @@ export default function SeriesDetail() {
               </span>
             )}
             {show.seasons?.length > 0 && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 px-3 py-1 glass-morphism-dark rounded-full">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
@@ -93,7 +95,7 @@ export default function SeriesDetail() {
               {show.genres.map((genre) => (
                 <span
                   key={genre}
-                  className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full"
+                  className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full glass-morphism-dark"
                 >
                   {genre}
                 </span>
@@ -129,11 +131,11 @@ export default function SeriesDetail() {
               const totalEpisodes = season.episodes?.length || 0;
 
               return (
-                <div key={season.id} className="bg-[#1a1a1a] rounded-xl overflow-hidden">
+                <div key={season.id} className="glass-morphism rounded-xl overflow-hidden">
                   {/* Season Header */}
                   <button
                     onClick={() => setExpandedSeason(isExpanded ? null : season.id)}
-                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#222] transition-colors"
+                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/10 transition-colors"
                   >
                     <span className="font-semibold text-white">{season.name}</span>
                     <span className="flex items-center gap-2 text-sm text-gray-400">
@@ -152,19 +154,24 @@ export default function SeriesDetail() {
                   {/* Episodes List */}
                   {isExpanded && season.episodes?.length > 0 && (
                     <div className="border-t border-gray-800">
-                      {season.episodes.map((episode) => (
+                      {season.episodes.map((episode, idx) => (
                         <div
                           key={episode.id}
-                          className="flex items-center justify-between px-5 py-3 border-b border-gray-800/50 last:border-b-0 hover:bg-[#222] transition-colors"
+                          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between px-5 py-3 gap-3 ${
+                            idx < season.episodes.length - 1 ? 'border-b border-gray-800/50' : ''
+                          } hover:bg-white/5 transition-colors`}
                         >
-                          <span className="text-sm text-gray-300">{episode.name}</span>
-                          <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-300 font-medium">{episode.name}</span>
+                          <div className="flex flex-wrap items-center gap-2">
                             {episode.streaming_links?.length > 0 && episode.streaming_links.map((link, i) => (
                               <button
                                 key={`stream-${i}`}
                                 onClick={() => navigate(`/player?url=${encodeURIComponent(link)}&title=${encodeURIComponent(episode.name)}&type=series&id=${id}`)}
-                                className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                                className="btn-3d text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2"
                               >
+                                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                                </svg>
                                 Watch {episode.streaming_links.length > 1 ? i + 1 : ''}
                               </button>
                             ))}
@@ -174,8 +181,11 @@ export default function SeriesDetail() {
                                 href={link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-3 py-1 bg-[#1a1a1a] border border-gray-700 hover:border-red-500 text-white text-xs font-medium rounded-lg transition-colors"
+                                className="btn-3d-secondary text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2"
                               >
+                                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
                                 Download {episode.download_links.length > 1 ? i + 1 : ''}
                               </a>
                             ))}
@@ -216,7 +226,7 @@ export default function SeriesDetail() {
 
       {/* Back to series */}
       <div className="py-6 text-center">
-        <Link to="/series" className="text-red-500 hover:text-red-400 transition-colors text-sm">
+        <Link to="/series" className="inline-flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors text-sm font-medium px-4 py-2 rounded-lg hover:bg-white/5">
           ← Back to All Series
         </Link>
       </div>

@@ -45,25 +45,27 @@ export default function MovieDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-4">
       {/* Movie Detail Content */}
-      <div className="flex flex-col md:flex-row gap-6 p-4 md:p-6">
+      <div className="flex flex-col md:flex-row gap-6 p-4 md:p-6 glass-morphism rounded-2xl">
         {/* Poster */}
-        <div className="shrink-0">
+        <div className="shrink-0 flex justify-center md:justify-start">
           <img
             src={resolveMediaUrl(movie.poster) || '/placeholder-poster.png'}
             alt={movie.name}
-            className="w-64 md:w-72 aspect-[2/3] object-cover rounded-xl shadow-2xl"
+            className="w-48 sm:w-56 md:w-64 lg:w-72 aspect-[2/3] object-cover rounded-xl shadow-2xl hover:shadow-red-500/50 transition-shadow duration-300"
             onError={(e) => { e.target.src = '/placeholder-poster.png'; }}
           />
         </div>
 
         {/* Details */}
         <div className="flex-1 space-y-4">
-          <h1 className="text-2xl md:text-3xl font-bold">{movie.name}</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-500 to-red-400 bg-clip-text text-transparent">
+            {movie.name}
+          </h1>
 
           {/* Meta row */}
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400">
+          <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-400">
             {movie.release_date && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 px-3 py-1 glass-morphism-dark rounded-full">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
@@ -71,7 +73,7 @@ export default function MovieDetail() {
               </span>
             )}
             {movie.views !== undefined && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 px-3 py-1 glass-morphism-dark rounded-full">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -87,7 +89,7 @@ export default function MovieDetail() {
               {movie.genres.map((genre) => (
                 <span
                   key={genre}
-                  className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full"
+                  className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full glass-morphism-dark"
                 >
                   {genre}
                 </span>
@@ -113,21 +115,19 @@ export default function MovieDetail() {
 
           {/* Streaming Links */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-300 mb-2">Streaming Links</h3>
+            <h3 className="text-sm font-semibold text-gray-300 mb-3">Streaming Links</h3>
             {movie.streaming_links?.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {movie.streaming_links.map((link, i) => (
                   <button
                     key={i}
                     onClick={() => navigate(`/player?url=${encodeURIComponent(link)}&title=${encodeURIComponent(movie.name)}&type=movie&id=${id}`)}
-                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                    className="btn-3d text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5"
                   >
-                    <span className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                      </svg>
-                      Watch #{i + 1}
-                    </span>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                    </svg>
+                    Watch {movie.streaming_links.length > 1 ? `#${i + 1}` : 'Now'}
                   </button>
                 ))}
               </div>
@@ -138,23 +138,21 @@ export default function MovieDetail() {
 
           {/* Download Links */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-300 mb-2">Download Links</h3>
+            <h3 className="text-sm font-semibold text-gray-300 mb-3">Download Links</h3>
             {movie.download_links?.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {movie.download_links.map((link, i) => (
                   <a
                     key={i}
                     href={link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-[#1a1a1a] border border-gray-700 hover:border-red-500 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="btn-3d-secondary text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5"
                   >
-                    <span className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      Download #{i + 1}
-                    </span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download {movie.download_links.length > 1 ? `#${i + 1}` : ''}
                   </a>
                 ))}
               </div>
@@ -190,7 +188,7 @@ export default function MovieDetail() {
 
       {/* Back to movies */}
       <div className="py-6 text-center">
-        <Link to="/movies" className="text-red-500 hover:text-red-400 transition-colors text-sm">
+        <Link to="/movies" className="inline-flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors text-sm font-medium px-4 py-2 rounded-lg hover:bg-white/5">
           ← Back to All Movies
         </Link>
       </div>
