@@ -1,2 +1,2 @@
-# Yangon TV Front-end UI Source Code
-Designed & Developed By Daddy Jeff
+# Yangon TV FRONT-END 
+Designed & Developed using React & Tailwind CSS by [သင့်အမည်]
