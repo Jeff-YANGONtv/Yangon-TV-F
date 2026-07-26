@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { moviesApi, resolveMediaUrl } from '../services/api';
+import { toSlugWithId, extractIdFromSlug } from '../utils/slug';
 import AdBanner from '../components/AdBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
 import MovieCard from '../components/MovieCard';
 
 export default function MovieDetail() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const [movie, setMovie] = useState(null);
   const [relatedMovies, setRelatedMovies] = useState([]);
@@ -19,8 +20,18 @@ export default function MovieDetail() {
       try {
         setLoading(true);
         setError(null);
+
+        // Extract numeric ID from slug (e.g. "the-dark-knight-42" -> 42)
+        const id = extractIdFromSlug(slug);
+        if (!id) {
+          setError('Invalid movie URL');
+          setLoading(false);
+          return;
+        }
+
         const res = await moviesApi.detail(id);
         setMovie(res.data || res);
+
         // Fetch related movies (same genre)
         const relatedRes = await moviesApi.list(1);
         const allMovies = relatedRes.data || [];
@@ -36,11 +47,14 @@ export default function MovieDetail() {
       }
     }
     fetchDetail();
-  }, [id]);
+  }, [slug]);
 
   if (loading) return <LoadingSkeleton type="detail" />;
   if (error) return <ErrorMessage message="Failed to load movie details" onRetry={() => window.location.reload()} />;
   if (!movie) return <ErrorMessage message="Movie not found" />;
+
+  const movieSlug = toSlugWithId(movie.name, movie.id);
+  const watchSlug = `${movieSlug}/watch`;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4">
@@ -121,7 +135,7 @@ export default function MovieDetail() {
                 {movie.streaming_links.map((link, i) => (
                   <button
                     key={i}
-                    onClick={() => navigate(`/player?url=${encodeURIComponent(link)}&title=${encodeURIComponent(movie.name)}&type=movie&id=${id}`)}
+                    onClick={() => navigate(`/movies/${movieSlug}/watch?url=${encodeURIComponent(link)}&title=${encodeURIComponent(movie.name)}&linkIndex=${i}`)}
                     className="btn-3d text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

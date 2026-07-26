@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { resolveMediaUrl } from '../services/api';
+import { toSlugWithId } from '../utils/slug';
 
 export default function MovieCard({ item, type = 'movie' }) {
-  const linkTo = type === 'series' ? `/series/${item.id}` : `/movies/${item.id}`;
+  const slug = toSlugWithId(item.name || item.title, item.id);
+  const linkTo = type === 'series' ? `/series/${slug}` : `/movies/${slug}`;
 
   return (
     <Link

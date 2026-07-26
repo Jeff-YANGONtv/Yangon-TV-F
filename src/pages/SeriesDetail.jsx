@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { showsApi, resolveMediaUrl } from '../services/api';
+import { toSlugWithId, extractIdFromSlug } from '../utils/slug';
 import AdBanner from '../components/AdBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
 import MovieCard from '../components/MovieCard';
 
 export default function SeriesDetail() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const [show, setShow] = useState(null);
   const [expandedSeason, setExpandedSeason] = useState(null);
@@ -20,6 +21,15 @@ export default function SeriesDetail() {
       try {
         setLoading(true);
         setError(null);
+
+        // Extract numeric ID from slug (e.g. "the-walking-dead-15" -> 15)
+        const id = extractIdFromSlug(slug);
+        if (!id) {
+          setError('Invalid series URL');
+          setLoading(false);
+          return;
+        }
+
         const res = await showsApi.detail(id);
         const showData = res.data || res;
         setShow(showData);
@@ -43,11 +53,13 @@ export default function SeriesDetail() {
       }
     }
     fetchDetail();
-  }, [id]);
+  }, [slug]);
 
   if (loading) return <LoadingSkeleton type="detail" />;
   if (error) return <ErrorMessage message="Failed to load series details" onRetry={() => window.location.reload()} />;
   if (!show) return <ErrorMessage message="Series not found" />;
+
+  const showSlug = toSlugWithId(show.name, show.id);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4">
@@ -166,7 +178,7 @@ export default function SeriesDetail() {
                             {episode.streaming_links?.length > 0 && episode.streaming_links.map((link, i) => (
                               <button
                                 key={`stream-${i}`}
-                                onClick={() => navigate(`/player?url=${encodeURIComponent(link)}&title=${encodeURIComponent(episode.name)}&type=series&id=${id}`)}
+                                onClick={() => navigate(`/series/${showSlug}/watch?url=${encodeURIComponent(link)}&title=${encodeURIComponent(episode.name)}&type=series&linkIndex=${i}`)}
                                 className="btn-3d text-xs sm:text-sm px-3 sm:px-4 py-1 sm:py-2"
                               >
                                 <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
