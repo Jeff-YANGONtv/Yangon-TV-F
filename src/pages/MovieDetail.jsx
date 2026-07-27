@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { moviesApi, resolveMediaUrl } from '../services/api';
-import { toSlugWithId, extractIdFromSlug } from '../utils/slug';
+import { toSlugWithId, extractTitleFromSlug } from '../utils/slug';
 import { encodeStreamLink } from '../utils/streamLink';
 import AdBanner from '../components/AdBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -22,21 +22,25 @@ export default function MovieDetail() {
         setLoading(true);
         setError(null);
 
-        // Extract numeric ID from slug (e.g. "the-dark-knight-42" -> 42)
-        const id = extractIdFromSlug(slug);
-        if (!id) {
+        // Extract title slug and search for the movie
+        const titleSlug = extractTitleFromSlug(slug);
+        if (!titleSlug) {
           setError('Invalid movie URL');
           setLoading(false);
           return;
         }
 
-        const res = await moviesApi.detail(id);
-        setMovie(res.data || res);
+        const res = await moviesApi.search(titleSlug);
+        const searchData = res.data || res;
+        // Search may return an array of results; pick the best match
+        const movieData = Array.isArray(searchData)
+          ? searchData.find(m => toSlugWithId(m.name) === titleSlug) || searchData[0] || null
+          : searchData;
+        setMovie(movieData);
 
         // Fetch related movies (same genre)
         const relatedRes = await moviesApi.list(1);
         const allMovies = relatedRes.data || [];
-        const movieData = res.data || res;
         const related = allMovies.filter(
           (m) => m.id !== movieData.id && m.genres?.some((g) => movieData.genres?.includes(g))
         ).slice(0, 12);

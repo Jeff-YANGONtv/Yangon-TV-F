@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { showsApi, resolveMediaUrl } from '../services/api';
-import { toSlugWithId, extractIdFromSlug } from '../utils/slug';
+import { toSlugWithId, extractTitleFromSlug } from '../utils/slug';
 import { encodeStreamLink } from '../utils/streamLink';
 import AdBanner from '../components/AdBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -23,16 +23,20 @@ export default function SeriesDetail() {
         setLoading(true);
         setError(null);
 
-        // Extract numeric ID from slug (e.g. "the-walking-dead-15" -> 15)
-        const id = extractIdFromSlug(slug);
-        if (!id) {
+        // Extract title slug and search for the series
+        const titleSlug = extractTitleFromSlug(slug);
+        if (!titleSlug) {
           setError('Invalid series URL');
           setLoading(false);
           return;
         }
 
-        const res = await showsApi.detail(id);
-        const showData = res.data || res;
+        const res = await showsApi.search(titleSlug);
+        const searchData = res.data || res;
+        // Search may return an array of results; pick the best match
+        const showData = Array.isArray(searchData)
+          ? searchData.find(s => toSlugWithId(s.name) === titleSlug) || searchData[0] || null
+          : searchData;
         setShow(showData);
 
         // Expand first season by default

@@ -16,20 +16,20 @@ export function toSlug(title) {
 }
 
 /**
- * Create a slug that includes an id suffix to ensure uniqueness
- * e.g. "the-dark-knight-42" for movie with id=42
+ * Create a clean slug from title only (no ID suffix).
+ * e.g. "The Dark Knight" -> "the-dark-knight"
  */
 export function toSlugWithId(title, id) {
-  const slug = toSlug(title);
-  return id ? `${slug}-${id}` : slug;
+  return toSlug(title);
 }
 
 /**
- * Extract the numeric id from a slug
- * e.g. "the-dark-knight-42" -> 42
+ * Extract the title portion from a slug (strip trailing numeric ID if present).
+ * e.g. "the-dark-knight-42" -> "the-dark-knight"
+ * e.g. "crime-101" -> "crime-101"
  */
-export function extractIdFromSlug(slug) {
-  if (!slug) return null;
-  const match = slug.match(/-(\d+)$/);
-  return match ? parseInt(match[1], 10) : null;
+export function extractTitleFromSlug(slug) {
+  if (!slug) return '';
+  // Remove trailing -<digits> if it looks like an ID suffix
+  return slug.replace(/-\d+$/, '');
 }

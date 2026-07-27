@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Hls from 'hls.js';
 import { showsApi } from '../services/api';
-import { extractIdFromSlug } from '../utils/slug';
+import { extractTitleFromSlug, toSlugWithId } from '../utils/slug';
 import { encodeStreamLink, decodeStreamLink, getYouTubeEmbedUrl } from '../utils/streamLink';
 
 /**
@@ -28,14 +28,18 @@ export default function SeriesWatch() {
       try {
         setLoading(true);
         setError(null);
-        const id = extractIdFromSlug(slug);
-        if (!id) {
+        const titleSlug = extractTitleFromSlug(slug);
+        if (!titleSlug) {
           setError('Invalid series URL');
           setLoading(false);
           return;
         }
-        const res = await showsApi.detail(id);
-        setShow(res.data || res);
+        const res = await showsApi.search(titleSlug);
+        const searchData = res.data || res;
+        const showData = Array.isArray(searchData)
+          ? searchData.find(s => toSlugWithId(s.name) === titleSlug) || searchData[0] || null
+          : searchData;
+        setShow(showData);
       } catch (err) {
         setError(err?.message || 'Failed to load');
       } finally {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Hls from 'hls.js';
 import { moviesApi } from '../services/api';
-import { extractIdFromSlug } from '../utils/slug';
+import { extractTitleFromSlug, toSlugWithId } from '../utils/slug';
 import { encodeStreamLink, decodeStreamLink, getYouTubeEmbedUrl } from '../utils/streamLink';
 
 /**
@@ -28,14 +28,18 @@ export default function MovieWatch() {
       try {
         setLoading(true);
         setError(null);
-        const id = extractIdFromSlug(slug);
-        if (!id) {
+        const titleSlug = extractTitleFromSlug(slug);
+        if (!titleSlug) {
           setError('Invalid movie URL');
           setLoading(false);
           return;
         }
-        const res = await moviesApi.detail(id);
-        setMovie(res.data || res);
+        const res = await moviesApi.search(titleSlug);
+        const searchData = res.data || res;
+        const movieData = Array.isArray(searchData)
+          ? searchData.find(m => toSlugWithId(m.name) === titleSlug) || searchData[0] || null
+          : searchData;
+        setMovie(movieData);
       } catch (err) {
         setError(err?.message || 'Failed to load');
       } finally {
