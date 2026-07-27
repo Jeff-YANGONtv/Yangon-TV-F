@@ -3,7 +3,7 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Hls from 'hls.js';
 import { showsApi } from '../services/api';
 import { extractTitleFromSlug, toSlugWithId, slugToTitle } from '../utils/slug';
-import { encodeStreamLink, decodeStreamLink, getYouTubeEmbedUrl } from '../utils/streamLink';
+import { encodeStreamLink, decodeStreamLink, parseStreamLink, getYouTubeEmbedUrl } from '../utils/streamLink';
 
 /**
  * SeriesWatch — Embedded video player for a series episode
@@ -58,19 +58,19 @@ export default function SeriesWatch() {
     fetchDetail();
   }, [slug]);
 
-  // Decode the stream link
+  // Decode the stream link from URL params
   const streamData = decodeStreamLink(streamEncoded);
 
   // Find download links for the same episode
   const findEpisodeDownloads = (showData, targetLink) => {
     if (!showData?.seasons || !targetLink) return [];
-    const targetSrc = decodeStreamLink(targetLink)?.src;
+    const targetSrc = parseStreamLink(targetLink)?.src;
     if (!targetSrc) return [];
     for (const season of showData.seasons) {
       if (!season.episodes) continue;
       for (const episode of season.episodes) {
         if (episode.streaming_links?.some(l => {
-          const parsed = decodeStreamLink(l);
+          const parsed = parseStreamLink(l);
           return parsed?.src === targetSrc;
         })) {
           return episode.download_links || [];
@@ -83,13 +83,13 @@ export default function SeriesWatch() {
   // Find all episode links for link switching
   const findEpisodeLinks = (showData, targetLink) => {
     if (!showData?.seasons || !targetLink) return [];
-    const targetSrc = decodeStreamLink(targetLink)?.src;
+    const targetSrc = parseStreamLink(targetLink)?.src;
     if (!targetSrc) return [];
     for (const season of showData.seasons) {
       if (!season.episodes) continue;
       for (const episode of season.episodes) {
         if (episode.streaming_links?.some(l => {
-          const parsed = decodeStreamLink(l);
+          const parsed = parseStreamLink(l);
           return parsed?.src === targetSrc;
         })) {
           return episode.streaming_links;

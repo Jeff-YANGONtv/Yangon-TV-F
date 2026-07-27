@@ -66,6 +66,7 @@ export function encodeStreamLink(link) {
 
 /**
  * Decode stream link from URL-safe format back to parsed data.
+ * Also handles raw/unencoded links (e.g. direct http URLs) by falling back to parseStreamLink.
  */
 export function decodeStreamLink(encoded) {
   if (!encoded) return null;
@@ -76,16 +77,20 @@ export function decodeStreamLink(encoded) {
 
     const type = encoded.substring(0, colonIdx);
     const payloadBase64 = encoded.substring(colonIdx + 1);
-    const decoded = decodeURIComponent(escape(atob(payloadBase64)));
 
-    if (type === 'iframe' || type === 'nstream') {
-      // payload is the src URL — return as nstream/iframe with src
+    // Validate known types — if it's a known type, try base64 decode
+    const knownTypes = ['iframe', 'youtube', 'nstream', 'direct', 'hls'];
+    if (knownTypes.includes(type)) {
+      const decoded = decodeURIComponent(escape(atob(payloadBase64)));
       return { type, src: decoded, raw: decoded };
     }
 
-    return { type, src: decoded, raw: decoded };
+    // If type is not recognized, it might be a raw URL (e.g., "http://..." or "https://...")
+    // Fallback: treat the whole string as a raw link
+    return parseStreamLink(encoded);
   } catch {
-    return null;
+    // If base64 decode fails, it's likely a raw link — try parsing directly
+    return parseStreamLink(encoded);
   }
 }
 
