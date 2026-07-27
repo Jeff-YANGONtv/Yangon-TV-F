@@ -197,7 +197,7 @@ export default function SeriesWatch() {
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
-              referrerPolicy="no-referrer"
+              referrerPolicy="no-referrer-when-downgrade"
               className="w-full h-full"
             />
           </div>
