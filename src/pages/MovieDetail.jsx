@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { moviesApi, resolveMediaUrl } from '../services/api';
-import { toSlugWithId, extractTitleFromSlug } from '../utils/slug';
+import { toSlugWithId, extractTitleFromSlug, slugToTitle } from '../utils/slug';
 import { encodeStreamLink } from '../utils/streamLink';
 import AdBanner from '../components/AdBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -30,7 +30,8 @@ export default function MovieDetail() {
           return;
         }
 
-        const res = await moviesApi.search(titleSlug);
+        const searchQuery = slugToTitle(titleSlug);
+        const res = await moviesApi.search(searchQuery);
         const searchData = res.data || res;
         // Search may return an array of results; pick the best match
         const movieData = Array.isArray(searchData)

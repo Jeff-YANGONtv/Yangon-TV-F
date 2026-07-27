@@ -33,3 +33,16 @@ export function extractTitleFromSlug(slug) {
   // Remove trailing -<digits> if it looks like an ID suffix
   return slug.replace(/-\d+$/, '');
 }
+
+/**
+ * Convert a slug back to a readable title for search queries.
+ * e.g. "game-of-thrones" -> "Game Of Thrones"
+ * e.g. "crime-101" -> "Crime 101"
+ */
+export function slugToTitle(slug) {
+  if (!slug) return '';
+  return slug
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}

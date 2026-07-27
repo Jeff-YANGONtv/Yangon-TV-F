@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Hls from 'hls.js';
 import { moviesApi } from '../services/api';
-import { extractTitleFromSlug, toSlugWithId } from '../utils/slug';
+import { extractTitleFromSlug, toSlugWithId, slugToTitle } from '../utils/slug';
 import { encodeStreamLink, decodeStreamLink, getYouTubeEmbedUrl } from '../utils/streamLink';
 
 /**
@@ -34,7 +34,8 @@ export default function MovieWatch() {
           setLoading(false);
           return;
         }
-        const res = await moviesApi.search(titleSlug);
+        const searchQuery = slugToTitle(titleSlug);
+        const res = await moviesApi.search(searchQuery);
         const searchData = res.data || res;
         const movieData = Array.isArray(searchData)
           ? searchData.find(m => toSlugWithId(m.name) === titleSlug) || searchData[0] || null

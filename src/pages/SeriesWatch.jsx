@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import Hls from 'hls.js';
 import { showsApi } from '../services/api';
-import { extractTitleFromSlug, toSlugWithId } from '../utils/slug';
+import { extractTitleFromSlug, toSlugWithId, slugToTitle } from '../utils/slug';
 import { encodeStreamLink, decodeStreamLink, getYouTubeEmbedUrl } from '../utils/streamLink';
 
 /**
@@ -34,7 +34,8 @@ export default function SeriesWatch() {
           setLoading(false);
           return;
         }
-        const res = await showsApi.search(titleSlug);
+        const searchQuery = slugToTitle(titleSlug);
+        const res = await showsApi.search(searchQuery);
         const searchData = res.data || res;
         const showData = Array.isArray(searchData)
           ? searchData.find(s => toSlugWithId(s.name) === titleSlug) || searchData[0] || null
