@@ -3,7 +3,22 @@
  * - type: 'iframe' | 'youtube' | 'nstream' | 'direct' | 'hls'
  * - src: the actual URL to embed/play
  * - raw: the original full link string (for nstream/iframe, this is the full HTML)
+ *
+ * For nstream.cc links, converts /v/ URLs to /e/ embed URLs so the iframe
+ * renders only the video player without navigation/UI elements.
  */
+
+/**
+ * Convert nstream.cc /v/ or /e/ URLs to embed-only /e/ format.
+ * This ensures the iframe renders only the video player.
+ */
+function toNstreamEmbedUrl(url) {
+  if (!url || !url.includes('nstream.cc')) return url;
+  // Replace /v/ or /watch/ with /e/ for embed-only view
+  return url.replace(/nstream\.cc\/v\//g, 'nstream.cc/e/')
+            .replace(/nstream\.cc\/watch\//g, 'nstream.cc/e/')
+            .replace(/nstream\.cc\/e\//g, 'nstream.cc/e/');
+}
 
 export function parseStreamLink(link) {
   if (!link || typeof link !== 'string') return null;
@@ -19,7 +34,7 @@ export function parseStreamLink(link) {
     }
 
     if (src.includes('nstream.cc')) {
-      return { type: 'nstream', src, raw: link };
+      return { type: 'nstream', src: toNstreamEmbedUrl(src), raw: link };
     }
     if (src.includes('youtube.com') || src.includes('youtu.be')) {
       return { type: 'youtube', src, raw: link };
@@ -34,7 +49,7 @@ export function parseStreamLink(link) {
 
   // Case 3: nstream.cc direct URL (no iframe wrapper)
   if (link.includes('nstream.cc')) {
-    return { type: 'nstream', src: link, raw: link };
+    return { type: 'nstream', src: toNstreamEmbedUrl(link), raw: link };
   }
 
   // Case 3b: HLS (.m3u8) direct URL
@@ -67,6 +82,7 @@ export function encodeStreamLink(link) {
 /**
  * Decode stream link from URL-safe format back to parsed data.
  * Also handles raw/unencoded links (e.g. direct http URLs) by falling back to parseStreamLink.
+ * For nstream type, converts /v/ URLs to /e/ embed URLs.
  */
 export function decodeStreamLink(encoded) {
   if (!encoded) return null;
@@ -82,6 +98,10 @@ export function decodeStreamLink(encoded) {
     const knownTypes = ['iframe', 'youtube', 'nstream', 'direct', 'hls'];
     if (knownTypes.includes(type)) {
       const decoded = decodeURIComponent(escape(atob(payloadBase64)));
+      // For nstream type, convert /v/ to /e/ for embed-only view
+      if (type === 'nstream') {
+        return { type, src: toNstreamEmbedUrl(decoded), raw: decoded };
+      }
       return { type, src: decoded, raw: decoded };
     }
 
