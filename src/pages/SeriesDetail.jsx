@@ -35,14 +35,22 @@ export default function SeriesDetail() {
         const res = await showsApi.search(searchQuery);
         const searchData = res.data || res;
         // Search may return an array of results; pick the best match
-        const showData = Array.isArray(searchData)
+        const searchResult = Array.isArray(searchData)
           ? searchData.find(s => toSlugWithId(s.name) === titleSlug) || searchData[0] || null
           : searchData;
-        setShow(showData);
 
-        // Expand first season by default
-        if (showData.seasons?.length > 0) {
-          setExpandedSeason(showData.seasons[0].id);
+        // Search doesn't include seasons, so fetch full detail by ID
+        if (searchResult?.id) {
+          const detailRes = await showsApi.detail(searchResult.id);
+          const showData = detailRes.data || detailRes;
+          setShow(showData);
+
+          // Expand first season by default
+          if (showData.seasons?.length > 0) {
+            setExpandedSeason(showData.seasons[0].id);
+          }
+        } else {
+          setShow(null);
         }
 
         // Fetch related shows
@@ -53,7 +61,7 @@ export default function SeriesDetail() {
         ).slice(0, 12);
         setRelatedShows(related);
       } catch (err) {
-        setError(err);
+        setError(err?.message || 'Failed to load');
       } finally {
         setLoading(false);
       }

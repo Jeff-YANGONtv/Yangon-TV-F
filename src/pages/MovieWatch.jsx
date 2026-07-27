@@ -37,10 +37,18 @@ export default function MovieWatch() {
         const searchQuery = slugToTitle(titleSlug);
         const res = await moviesApi.search(searchQuery);
         const searchData = res.data || res;
-        const movieData = Array.isArray(searchData)
+        const searchResult = Array.isArray(searchData)
           ? searchData.find(m => toSlugWithId(m.name) === titleSlug) || searchData[0] || null
           : searchData;
-        setMovie(movieData);
+
+        // Search doesn't include streaming_links, so fetch full detail by ID
+        if (searchResult?.id) {
+          const detailRes = await moviesApi.detail(searchResult.id);
+          const movieData = detailRes.data || detailRes;
+          setMovie(movieData);
+        } else {
+          setMovie(null);
+        }
       } catch (err) {
         setError(err?.message || 'Failed to load');
       } finally {

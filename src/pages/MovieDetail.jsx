@@ -34,10 +34,18 @@ export default function MovieDetail() {
         const res = await moviesApi.search(searchQuery);
         const searchData = res.data || res;
         // Search may return an array of results; pick the best match
-        const movieData = Array.isArray(searchData)
+        const searchResult = Array.isArray(searchData)
           ? searchData.find(m => toSlugWithId(m.name) === titleSlug) || searchData[0] || null
           : searchData;
-        setMovie(movieData);
+
+        // Search doesn't include streaming_links/download_links, so fetch full detail by ID
+        if (searchResult?.id) {
+          const detailRes = await moviesApi.detail(searchResult.id);
+          const movieData = detailRes.data || detailRes;
+          setMovie(movieData);
+        } else {
+          setMovie(null);
+        }
 
         // Fetch related movies (same genre)
         const relatedRes = await moviesApi.list(1);
@@ -47,7 +55,7 @@ export default function MovieDetail() {
         ).slice(0, 12);
         setRelatedMovies(related);
       } catch (err) {
-        setError(err);
+        setError(err?.message || 'Failed to load');
       } finally {
         setLoading(false);
       }

@@ -37,10 +37,18 @@ export default function SeriesWatch() {
         const searchQuery = slugToTitle(titleSlug);
         const res = await showsApi.search(searchQuery);
         const searchData = res.data || res;
-        const showData = Array.isArray(searchData)
+        const searchResult = Array.isArray(searchData)
           ? searchData.find(s => toSlugWithId(s.name) === titleSlug) || searchData[0] || null
           : searchData;
-        setShow(showData);
+
+        // Search doesn't include seasons/episodes, so fetch full detail by ID
+        if (searchResult?.id) {
+          const detailRes = await showsApi.detail(searchResult.id);
+          const showData = detailRes.data || detailRes;
+          setShow(showData);
+        } else {
+          setShow(null);
+        }
       } catch (err) {
         setError(err?.message || 'Failed to load');
       } finally {
