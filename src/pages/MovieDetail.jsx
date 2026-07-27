@@ -39,12 +39,14 @@ export default function MovieDetail() {
           : searchData;
 
         // Search doesn't include streaming_links/download_links, so fetch full detail by ID
+        let movieData = null;
         if (searchResult?.id) {
           const detailRes = await moviesApi.detail(searchResult.id);
-          const movieData = detailRes.data || detailRes;
+          movieData = detailRes.data || detailRes;
           setMovie(movieData);
         } else {
           setMovie(null);
+          return; // No movie found, skip related movies
         }
 
         // Fetch related movies (same genre)

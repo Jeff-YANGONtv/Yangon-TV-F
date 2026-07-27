@@ -40,9 +40,10 @@ export default function SeriesDetail() {
           : searchData;
 
         // Search doesn't include seasons, so fetch full detail by ID
+        let showData = null;
         if (searchResult?.id) {
           const detailRes = await showsApi.detail(searchResult.id);
-          const showData = detailRes.data || detailRes;
+          showData = detailRes.data || detailRes;
           setShow(showData);
 
           // Expand first season by default
@@ -51,6 +52,7 @@ export default function SeriesDetail() {
           }
         } else {
           setShow(null);
+          return; // No show found, skip related shows
         }
 
         // Fetch related shows
