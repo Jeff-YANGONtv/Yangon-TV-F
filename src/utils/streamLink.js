@@ -53,21 +53,13 @@ export function parseStreamLink(link) {
 
 /**
  * Encode stream link for URL-safe passing.
- * For iframe/nstream types: base64 encode the FULL raw HTML (not just src).
- * For youtube/direct/hls types: base64 encode just the src URL.
- * Format: "{type}:{base64payload}"
+ * Encode just the src URL for ALL types (including nstream/iframe).
+ * Format: "{type}:{base64src}"
  */
 export function encodeStreamLink(link) {
   const parsed = parseStreamLink(link);
   if (!parsed) return '';
 
-  // For iframe/nstream — encode the full raw HTML so the player works exactly as backend provides
-  if (parsed.type === 'iframe' || parsed.type === 'nstream') {
-    const payload = btoa(unescape(encodeURIComponent(parsed.raw)));
-    return `${parsed.type}:${payload}`;
-  }
-
-  // For youtube/direct/hls — encode just the src URL
   const srcBase64 = btoa(unescape(encodeURIComponent(parsed.src)));
   return `${parsed.type}:${srcBase64}`;
 }
@@ -87,9 +79,8 @@ export function decodeStreamLink(encoded) {
     const decoded = decodeURIComponent(escape(atob(payloadBase64)));
 
     if (type === 'iframe' || type === 'nstream') {
-      // payload is the full raw HTML — re-parse it
-      const parsed = parseStreamLink(decoded);
-      return parsed || { type, src: decoded, raw: decoded };
+      // payload is the src URL — return as nstream/iframe with src
+      return { type, src: decoded, raw: decoded };
     }
 
     return { type, src: decoded, raw: decoded };
