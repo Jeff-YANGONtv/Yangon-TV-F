@@ -1,6 +1,6 @@
 /**
  * Parse a streaming link and return structured data:
- * - type: 'iframe' | 'youtube' | 'nstream' | 'direct'
+ * - type: 'iframe' | 'youtube' | 'nstream' | 'direct' | 'hls'
  * - src: the actual URL to embed/play
  * - raw: the original full link string (for nstream/iframe, this is the full HTML)
  */
@@ -12,6 +12,12 @@ export function parseStreamLink(link) {
   if (link.includes('<iframe') || link.includes('src=')) {
     const iframeMatch = link.match(/src\s*=\s*["']([^"']+)["']/);
     const src = iframeMatch ? iframeMatch[1] : '';
+
+    // HLS detection on extracted src
+    if (src.includes('.m3u8')) {
+      return { type: 'hls', src, raw: link };
+    }
+
     if (src.includes('nstream.cc')) {
       return { type: 'nstream', src, raw: link };
     }
@@ -31,6 +37,11 @@ export function parseStreamLink(link) {
     return { type: 'nstream', src: link, raw: link };
   }
 
+  // Case 3b: HLS (.m3u8) direct URL
+  if (link.includes('.m3u8')) {
+    return { type: 'hls', src: link, raw: link };
+  }
+
   // Case 4: Direct video file
   if (link.includes('.mp4') || link.includes('.webm') || link.includes('.mkv')) {
     return { type: 'direct', src: link, raw: link };
@@ -43,7 +54,7 @@ export function parseStreamLink(link) {
 /**
  * Encode stream link for URL-safe passing.
  * For iframe/nstream types: base64 encode the FULL raw HTML (not just src).
- * For youtube/direct types: base64 encode just the src URL.
+ * For youtube/direct/hls types: base64 encode just the src URL.
  * Format: "{type}:{base64payload}"
  */
 export function encodeStreamLink(link) {
@@ -56,7 +67,7 @@ export function encodeStreamLink(link) {
     return `${parsed.type}:${payload}`;
   }
 
-  // For youtube/direct — encode just the src URL
+  // For youtube/direct/hls — encode just the src URL
   const srcBase64 = btoa(unescape(encodeURIComponent(parsed.src)));
   return `${parsed.type}:${srcBase64}`;
 }

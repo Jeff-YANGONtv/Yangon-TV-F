@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
+import Hls from 'hls.js';
 import { showsApi } from '../services/api';
 import { extractIdFromSlug } from '../utils/slug';
 import { encodeStreamLink, decodeStreamLink, getYouTubeEmbedUrl } from '../utils/streamLink';
@@ -15,6 +16,9 @@ export default function SeriesWatch() {
   const [show, setShow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const videoRef = useRef(null);
+  const hlsRef = useRef(null);
 
   const streamEncoded = searchParams.get('stream');
   const linkIndex = parseInt(searchParams.get('linkIndex') || '0', 10);
@@ -33,7 +37,7 @@ export default function SeriesWatch() {
         const res = await showsApi.detail(id);
         setShow(res.data || res);
       } catch (err) {
-        setError(err);
+        setError(err?.message || 'Failed to load');
       } finally {
         setLoading(false);
       }
@@ -82,6 +86,36 @@ export default function SeriesWatch() {
     return [];
   };
 
+  // HLS setup / cleanup
+  useEffect(() => {
+    if (streamData?.type !== 'hls') return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Safari supports HLS natively
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamData.src;
+      video.addEventListener('loadedmetadata', () => video.play());
+    } else if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(streamData.src);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play();
+      });
+      hlsRef.current = hls;
+    } else {
+      setError('HLS playback is not supported in this browser.');
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [streamData]);
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -128,6 +162,7 @@ export default function SeriesWatch() {
   const youtubeEmbedUrl = streamData.type === 'youtube' ? getYouTubeEmbedUrl(streamData.src) : null;
   const isDirect = streamData.type === 'direct';
   const isIframeEmbed = streamData.type === 'nstream' || streamData.type === 'iframe';
+  const isHls = streamData.type === 'hls';
 
   const episodeLinks = findEpisodeLinks(show, streamEncoded);
   const episodeDownloads = findEpisodeDownloads(show, streamEncoded);
@@ -147,26 +182,37 @@ export default function SeriesWatch() {
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+              referrerPolicy="no-referrer"
               className="w-full h-full"
             />
           </div>
         ) : isIframeEmbed ? (
-          // nstream or iframe — render the full raw HTML from backend
-          <div
-            className="aspect-video [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0"
-            dangerouslySetInnerHTML={{ __html: streamData.raw }}
-          />
-        ) : isDirect ? (
-          // Direct video file
+          // nstream or iframe — render clean iframe element
+          <div className="aspect-video">
+            <iframe
+              width="100%"
+              height="100%"
+              src={streamData.src}
+              title={title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowFullScreen
+              referrerPolicy="no-referrer"
+              className="w-full h-full"
+            />
+          </div>
+        ) : isDirect || isHls ? (
+          // Direct video file or HLS stream
           <div className="aspect-video">
             <video
+              ref={videoRef}
               width="100%"
               height="100%"
               controls
               autoPlay
               className="w-full h-full bg-black"
+              {...(isDirect ? { src: streamData.src } : {})}
             >
-              <source src={streamData.src} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
@@ -183,7 +229,13 @@ export default function SeriesWatch() {
           {title}
         </h1>
         <p className="text-gray-400 text-sm">
-          {youtubeEmbedUrl ? 'Playing from YouTube' : streamData.type === 'nstream' ? 'Playing from nstream' : streamData.type === 'iframe' ? 'Playing from embed' : 'Playing from direct source'}
+          {youtubeEmbedUrl
+            ? 'Playing from YouTube'
+            : isIframeEmbed
+              ? 'Playing from embed'
+              : isHls
+                ? 'Playing HLS stream'
+                : 'Playing from direct source'}
         </p>
       </div>
 
