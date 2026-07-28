@@ -23,23 +23,43 @@ export default function SeriesDetail() {
         setLoading(true);
         setError(null);
 
-        // Use the new bySlug API directly
-        const res = await showsApi.bySlug(slug);
-        const showData = res.data || res;
-        setShow(showData);
+        let showData = null;
 
-        // Expand first season by default
-        if (showData.seasons?.length > 0) {
-          setExpandedSeason(showData.seasons[0].id);
+        // Try to extract ID from slug (e.g., "title-123")
+        const idMatch = slug.match(/-(\d+)$/);
+        if (idMatch) {
+          const id = idMatch[1];
+          try {
+            const res = await showsApi.detail(id);
+            showData = res.data || res;
+          } catch (e) {
+            // Fallback
+          }
         }
 
-        // Fetch related shows
-        const relatedRes = await showsApi.list(1);
-        const allShows = relatedRes.data || [];
-        const related = allShows.filter(
-          (s) => s.id !== showData.id && s.genres?.some((g) => showData.genres?.includes(g))
-        ).slice(0, 12);
-        setRelatedShows(related);
+        if (!showData) {
+          const res = await showsApi.bySlug(slug);
+          showData = res.data || res;
+        }
+
+        if (showData) {
+          setShow(showData);
+
+          // Expand first season by default
+          if (showData.seasons?.length > 0) {
+            setExpandedSeason(showData.seasons[0].id);
+          }
+
+          // Fetch related shows
+          const relatedRes = await showsApi.list(1);
+          const allShows = relatedRes.data || [];
+          const related = allShows.filter(
+            (s) => s.id !== showData.id && s.genres?.some((g) => showData.genres?.includes(g))
+          ).slice(0, 12);
+          setRelatedShows(related);
+        } else {
+          setError('Series not found');
+        }
       } catch (err) {
         setError(err?.message || 'Failed to load');
       } finally {
