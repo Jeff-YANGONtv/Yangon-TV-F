@@ -28,28 +28,13 @@ export default function MovieWatch() {
       try {
         setLoading(true);
         setError(null);
-        const titleSlug = extractTitleFromSlug(slug);
-        if (!titleSlug) {
-          setError('Invalid movie URL');
-          setLoading(false);
-          return;
-        }
-        const searchQuery = slugToTitle(titleSlug);
-        const res = await moviesApi.search(searchQuery);
-        const searchData = res.data || res;
-        const searchResult = Array.isArray(searchData)
-          ? searchData.find(m => toSlugWithId(m.name) === titleSlug) || searchData[0] || null
-          : searchData;
-
-        // Search doesn't include streaming_links, so fetch full detail by ID
-        if (searchResult?.id) {
-          const detailRes = await moviesApi.detail(searchResult.id);
-          const movieData = detailRes.data || detailRes;
-          setMovie(movieData);
-        } else {
-          setMovie(null);
-        }
+        
+        // Use the new bySlug API directly
+        const res = await moviesApi.bySlug(slug);
+        const movieData = res.data || res;
+        setMovie(movieData);
       } catch (err) {
+        // Fallback for older slugs or errors
         setError(err?.message || 'Failed to load');
       } finally {
         setLoading(false);

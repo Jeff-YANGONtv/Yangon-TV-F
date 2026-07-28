@@ -16,38 +16,16 @@ export default function MovieDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+    useEffect(() => {
     async function fetchDetail() {
       try {
         setLoading(true);
         setError(null);
 
-        // Extract title slug and search for the movie
-        const titleSlug = extractTitleFromSlug(slug);
-        if (!titleSlug) {
-          setError('Invalid movie URL');
-          setLoading(false);
-          return;
-        }
-
-        const searchQuery = slugToTitle(titleSlug);
-        const res = await moviesApi.search(searchQuery);
-        const searchData = res.data || res;
-        // Search may return an array of results; pick the best match
-        const searchResult = Array.isArray(searchData)
-          ? searchData.find(m => toSlugWithId(m.name) === titleSlug) || searchData[0] || null
-          : searchData;
-
-        // Search doesn't include streaming_links/download_links, so fetch full detail by ID
-        let movieData = null;
-        if (searchResult?.id) {
-          const detailRes = await moviesApi.detail(searchResult.id);
-          movieData = detailRes.data || detailRes;
-          setMovie(movieData);
-        } else {
-          setMovie(null);
-          return; // No movie found, skip related movies
-        }
+        // Use the new bySlug API directly
+        const res = await moviesApi.bySlug(slug);
+        const movieData = res.data || res;
+        setMovie(movieData);
 
         // Fetch related movies (same genre)
         const relatedRes = await moviesApi.list(1);

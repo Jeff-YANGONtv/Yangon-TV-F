@@ -28,27 +28,11 @@ export default function SeriesWatch() {
       try {
         setLoading(true);
         setError(null);
-        const titleSlug = extractTitleFromSlug(slug);
-        if (!titleSlug) {
-          setError('Invalid series URL');
-          setLoading(false);
-          return;
-        }
-        const searchQuery = slugToTitle(titleSlug);
-        const res = await showsApi.search(searchQuery);
-        const searchData = res.data || res;
-        const searchResult = Array.isArray(searchData)
-          ? searchData.find(s => toSlugWithId(s.name) === titleSlug) || searchData[0] || null
-          : searchData;
-
-        // Search doesn't include seasons/episodes, so fetch full detail by ID
-        if (searchResult?.id) {
-          const detailRes = await showsApi.detail(searchResult.id);
-          const showData = detailRes.data || detailRes;
-          setShow(showData);
-        } else {
-          setShow(null);
-        }
+        
+        // Use the new bySlug API directly
+        const res = await showsApi.bySlug(slug);
+        const showData = res.data || res;
+        setShow(showData);
       } catch (err) {
         setError(err?.message || 'Failed to load');
       } finally {

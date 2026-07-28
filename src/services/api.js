@@ -29,6 +29,7 @@ const unwrap = (res) => {
 export const moviesApi = {
   list: (page = 1) => client.get('/movies', { params: { p: page } }).then(unwrap),
   detail: (id) => client.get(`/movies/${id}`).then(unwrap),
+  bySlug: (slug) => client.get(`/movies/slug/${slug}`).then(unwrap),
   search: (query) => client.get('/movies/search', { params: { query: query } }).then(unwrap),
   filter: (params) => client.get('/movies/filter', { params }).then(unwrap),
 };
@@ -37,6 +38,7 @@ export const moviesApi = {
 export const showsApi = {
   list: (page = 1) => client.get('/shows', { params: { p: page } }).then(unwrap),
   detail: (id) => client.get(`/shows/${id}`).then(unwrap),
+  bySlug: (slug) => client.get(`/shows/slug/${slug}`).then(unwrap),
   search: (query) => client.get('/shows/search', { params: { query: query } }).then(unwrap),
   filter: (params) => client.get('/shows/filter', { params }).then(unwrap),
 };

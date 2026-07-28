@@ -23,36 +23,14 @@ export default function SeriesDetail() {
         setLoading(true);
         setError(null);
 
-        // Extract title slug and search for the series
-        const titleSlug = extractTitleFromSlug(slug);
-        if (!titleSlug) {
-          setError('Invalid series URL');
-          setLoading(false);
-          return;
-        }
+        // Use the new bySlug API directly
+        const res = await showsApi.bySlug(slug);
+        const showData = res.data || res;
+        setShow(showData);
 
-        const searchQuery = slugToTitle(titleSlug);
-        const res = await showsApi.search(searchQuery);
-        const searchData = res.data || res;
-        // Search may return an array of results; pick the best match
-        const searchResult = Array.isArray(searchData)
-          ? searchData.find(s => toSlugWithId(s.name) === titleSlug) || searchData[0] || null
-          : searchData;
-
-        // Search doesn't include seasons, so fetch full detail by ID
-        let showData = null;
-        if (searchResult?.id) {
-          const detailRes = await showsApi.detail(searchResult.id);
-          showData = detailRes.data || detailRes;
-          setShow(showData);
-
-          // Expand first season by default
-          if (showData.seasons?.length > 0) {
-            setExpandedSeason(showData.seasons[0].id);
-          }
-        } else {
-          setShow(null);
-          return; // No show found, skip related shows
+        // Expand first season by default
+        if (showData.seasons?.length > 0) {
+          setExpandedSeason(showData.seasons[0].id);
         }
 
         // Fetch related shows
