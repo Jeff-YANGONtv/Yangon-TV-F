@@ -29,24 +29,9 @@ export default function MovieWatch() {
         setLoading(true);
         setError(null);
         
-        let movieData = null;
-
-        // Try to extract ID from slug (e.g., "title-123")
-        const idMatch = slug.match(/-(\d+)$/);
-        if (idMatch) {
-          const id = idMatch[1];
-          try {
-            const res = await moviesApi.detail(id);
-            movieData = res.data || res;
-          } catch (e) {
-            // Fallback
-          }
-        }
-
-        if (!movieData) {
-          const res = await moviesApi.bySlug(slug);
-          movieData = res.data || res;
-        }
+        // Fetch by slug directly
+        const res = await moviesApi.bySlug(slug);
+        const movieData = res.data || res;
 
         if (movieData) {
           setMovie(movieData);

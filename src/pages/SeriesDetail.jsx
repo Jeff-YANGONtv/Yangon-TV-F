@@ -23,24 +23,9 @@ export default function SeriesDetail() {
         setLoading(true);
         setError(null);
 
-        let showData = null;
-
-        // Try to extract ID from slug (e.g., "title-123")
-        const idMatch = slug.match(/-(\d+)$/);
-        if (idMatch) {
-          const id = idMatch[1];
-          try {
-            const res = await showsApi.detail(id);
-            showData = res.data || res;
-          } catch (e) {
-            // Fallback
-          }
-        }
-
-        if (!showData) {
-          const res = await showsApi.bySlug(slug);
-          showData = res.data || res;
-        }
+        // Fetch by slug directly
+        const res = await showsApi.bySlug(slug);
+        const showData = res.data || res;
 
         if (showData) {
           setShow(showData);

@@ -22,8 +22,7 @@ export function toSlug(title) {
  * NOTE: This is now a legacy helper. We should prefer using item.slug from the backend.
  */
 export function toSlugWithId(title, id) {
-  if (!id) return toSlug(title);
-  return `${toSlug(title)}-${id}`;
+  return toSlug(title);
 }
 
 /**
