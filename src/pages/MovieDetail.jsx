@@ -47,7 +47,7 @@ export default function MovieDetail() {
   if (error) return <ErrorMessage message="Failed to load movie details" onRetry={() => window.location.reload()} />;
   if (!movie) return <ErrorMessage message="Movie not found" />;
 
-  const movieSlug = toSlugWithId(movie.name, movie.id);
+  const movieSlug = movie.slug || toSlugWithId(movie.name, movie.id);
   const watchSlug = `${movieSlug}/watch`;
 
   return (

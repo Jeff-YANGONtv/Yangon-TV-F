@@ -3,7 +3,8 @@ import { resolveMediaUrl } from '../services/api';
 import { toSlugWithId } from '../utils/slug';
 
 export default function MovieCard({ item, type = 'movie' }) {
-  const slug = toSlugWithId(item.name || item.title, item.id);
+  // Prefer the slug provided by the backend, fallback to generated slug if missing
+  const slug = item.slug || toSlugWithId(item.name || item.title, item.id);
   const linkTo = type === 'series' ? `/series/${slug}` : `/movies/${slug}`;
 
   return (

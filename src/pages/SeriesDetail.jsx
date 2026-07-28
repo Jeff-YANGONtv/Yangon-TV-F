@@ -53,7 +53,7 @@ export default function SeriesDetail() {
   if (error) return <ErrorMessage message="Failed to load series details" onRetry={() => window.location.reload()} />;
   if (!show) return <ErrorMessage message="Series not found" />;
 
-  const showSlug = toSlugWithId(show.name, show.id);
+  const showSlug = show.slug || toSlugWithId(show.name, show.id);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4">

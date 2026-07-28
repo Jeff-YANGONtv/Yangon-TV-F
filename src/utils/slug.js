@@ -18,20 +18,25 @@ export function toSlug(title) {
 /**
  * Create a clean slug from title only (no ID suffix).
  * e.g. "The Dark Knight" -> "the-dark-knight"
+ * 
+ * NOTE: This is now a legacy helper. We should prefer using item.slug from the backend.
  */
 export function toSlugWithId(title, id) {
   return toSlug(title);
 }
 
 /**
- * Extract the title portion from a slug (strip trailing numeric ID if present).
- * e.g. "the-dark-knight-42" -> "the-dark-knight"
- * e.g. "crime-101" -> "crime-101"
+ * Extract the title portion from a slug.
+ * This helper is mostly for display or fallback purposes.
  */
 export function extractTitleFromSlug(slug) {
   if (!slug) return '';
-  // Remove trailing -<digits> if it looks like an ID suffix
-  return slug.replace(/-\d+$/, '');
+  // Since backend slugs might have -1, -2 for uniqueness, 
+  // and titles like "Crime 101" result in "crime-101",
+  // we should be careful about stripping trailing digits.
+  // If the slug matches the backend pattern (name-suffix), 
+  // we just return the slug itself or handle it based on requirements.
+  return slug;
 }
 
 /**
