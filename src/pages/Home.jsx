@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { moviesApi, showsApi, sortedMoviesApi, resolveMediaUrl } from '../services/api';
 import { toSlugWithId } from '../utils/slug';
 import AdBanner from '../components/AdBanner';
+import AdSlider from '../components/AdSlider';
 import MovieCard from '../components/MovieCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
@@ -69,8 +70,8 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-4">
-      {/* Top Ad Banner */}
-      <AdBanner position="top" />
+      {/* Top Ad Slider */}
+      <AdSlider position="top" />
 
       {/* Hero Slider / Recently Added */}
       <section className="my-6">
