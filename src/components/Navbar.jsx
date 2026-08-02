@@ -2,14 +2,10 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FaHome, FaFilm, FaTv, FaInfoCircle, FaLink, FaBars, FaTimes, FaUser, FaSignOutAlt, FaSignInAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
-import { useAuthCheck } from '../hooks/useAuthCheck';
-import AuthModal from './AuthModal';
-
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
-  const { checkAuth, showAuthModal, setShowAuthModal } = useAuthCheck();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
@@ -46,15 +42,9 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex gap-8 items-center">
           {navItems.map(({ path, icon: Icon, label }) => (
-            <button
+            <Link
               key={path}
-              onClick={() => {
-                if (path === '/' || path === '/about') {
-                  navigate(path);
-                } else {
-                  checkAuth(() => navigate(path));
-                }
-              }}
+              to={path}
               aria-label={label}
               className={`transition-all duration-300 flex items-center gap-2 ${
                 isActive(path)
@@ -64,7 +54,7 @@ export default function Navbar() {
             >
               <Icon size={18} />
               <span className="text-sm font-medium">{label}</span>
-            </button>
+            </Link>
           ))}
         </div>
 
@@ -122,17 +112,11 @@ export default function Navbar() {
         <div className="md:hidden glass-morphism-dark border-t border-gray-800">
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
             {navItems.map(({ path, icon: Icon, label }) => (
-              <button
+              <Link
                 key={path}
-                onClick={() => {
-                  handleNavClick();
-                  if (path === '/' || path === '/about') {
-                    navigate(path);
-                  } else {
-                    checkAuth(() => navigate(path));
-                  }
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                to={path}
+                onClick={handleNavClick}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                   isActive(path)
                     ? 'bg-red-500/20 text-red-500'
                     : 'text-gray-400 hover:bg-white/10 hover:text-red-500'
@@ -140,7 +124,7 @@ export default function Navbar() {
               >
                 <Icon size={20} />
                 <span className="font-medium">{label}</span>
-              </button>
+              </Link>
             ))}
             
             {isAuthenticated && (
@@ -156,10 +140,6 @@ export default function Navbar() {
         </div>
       )}
 
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
     </nav>
   );
 }
