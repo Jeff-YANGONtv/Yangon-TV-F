@@ -66,4 +66,20 @@ export const socialsApi = {
   list: () => client.get('/socials').then(unwrap),
 };
 
+// --- Auth ---
+export const authApi = {
+  login: (email, password) => client.post('/login', { email, password }),
+  register: (data) => client.post('/register', data),
+  logout: () => client.post('/logout'),
+};
+
+// Add token to requests
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export { client as default };

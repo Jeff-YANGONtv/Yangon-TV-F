@@ -1,10 +1,17 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaFilm, FaTv, FaInfoCircle, FaLink, FaBars, FaTimes } from 'react-icons/fa';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaHome, FaFilm, FaTv, FaInfoCircle, FaLink, FaBars, FaTimes, FaUser, FaSignOutAlt, FaSignInAlt } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
+import { useAuthCheck } from '../hooks/useAuthCheck';
+import AuthModal from './AuthModal';
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout, isAuthenticated } = useAuth();
+  const { checkAuth, showAuthModal, setShowAuthModal } = useAuthCheck();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const navItems = [
     { path: '/', icon: FaHome, label: 'Home' },
@@ -20,6 +27,12 @@ export default function Navbar() {
     setMobileMenuOpen(false);
   };
 
+  const handleLogout = () => {
+    logout();
+    setProfileDropdownOpen(false);
+    navigate('/');
+  };
+
   return (
     <nav className="sticky top-0 z-50 glass-morphism-dark border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -33,9 +46,15 @@ export default function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex gap-8 items-center">
           {navItems.map(({ path, icon: Icon, label }) => (
-            <Link
+            <button
               key={path}
-              to={path}
+              onClick={() => {
+                if (path === '/' || path === '/about') {
+                  navigate(path);
+                } else {
+                  checkAuth(() => navigate(path));
+                }
+              }}
               aria-label={label}
               className={`transition-all duration-300 flex items-center gap-2 ${
                 isActive(path)
@@ -43,44 +62,104 @@ export default function Navbar() {
                   : 'text-gray-400 hover:text-red-500 hover:scale-110'
               }`}
             >
-              <Icon size={20} />
+              <Icon size={18} />
               <span className="text-sm font-medium">{label}</span>
-            </Link>
+            </button>
           ))}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-red-500"
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-        </button>
+        {/* Auth Section */}
+        <div className="flex items-center gap-4">
+          {isAuthenticated ? (
+            <div className="relative">
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="flex items-center gap-2 p-2 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-all"
+              >
+                <FaUser size={18} />
+                <span className="hidden sm:inline text-sm font-medium">{user.name}</span>
+              </button>
+
+              {profileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl py-2 z-50">
+                  <div className="px-4 py-2 border-b border-white/5 mb-2">
+                    <p className="text-xs text-gray-500">Signed in as</p>
+                    <p className="text-sm font-semibold text-white truncate">{user.email}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-white/5 transition-colors"
+                  >
+                    <FaSignOutAlt size={16} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white transition-all shadow-lg shadow-red-600/20"
+            >
+              <FaSignInAlt size={18} />
+              <span className="hidden sm:inline text-sm font-bold">Sign In</span>
+            </Link>
+          )}
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-red-500"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden glass-morphism-dark border-t border-gray-800 mobile-menu-enter">
+        <div className="md:hidden glass-morphism-dark border-t border-gray-800">
           <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
             {navItems.map(({ path, icon: Icon, label }) => (
-              <Link
+              <button
                 key={path}
-                to={path}
-                onClick={handleNavClick}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                onClick={() => {
+                  handleNavClick();
+                  if (path === '/' || path === '/about') {
+                    navigate(path);
+                  } else {
+                    checkAuth(() => navigate(path));
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                   isActive(path)
-                    ? 'bg-red-500/20 text-red-500 drop-shadow-[0_0_8px_#ef4444]'
+                    ? 'bg-red-500/20 text-red-500'
                     : 'text-gray-400 hover:bg-white/10 hover:text-red-500'
                 }`}
               >
                 <Icon size={20} />
                 <span className="font-medium">{label}</span>
-              </Link>
+              </button>
             ))}
+            
+            {isAuthenticated && (
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-white/10 transition-all"
+              >
+                <FaSignOutAlt size={20} />
+                <span className="font-medium">Logout</span>
+              </button>
+            )}
           </div>
         </div>
       )}
+
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
     </nav>
   );
 }
