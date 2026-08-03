@@ -11,8 +11,7 @@ import About from './pages/About'
 import Links from './pages/Links'
 import MovieWatch from './pages/MovieWatch'
 import SeriesWatch from './pages/SeriesWatch'
-import Login from './pages/Login'
-import Register from './pages/Register'
+import AuthPage from './pages/AuthPage'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 function ScrollToTop() {
@@ -25,27 +24,30 @@ function ScrollToTop() {
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
   
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
   return children;
 };
 
 function AppContent() {
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/auth';
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f5]">
       <ScrollToTop />
-      <Navbar />
-      <main className="min-h-[calc(100vh-200px)]">
+      {!isAuthPage && <Navbar />}
+      <main className={!isAuthPage ? "min-h-[calc(100vh-200px)]" : ""}>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/about" element={<About />} />
           
           {/* Protected Routes */}
@@ -56,9 +58,13 @@ function AppContent() {
           <Route path="/series/:slug" element={<ProtectedRoute><SeriesDetail /></ProtectedRoute>} />
           <Route path="/series/:slug/watch" element={<ProtectedRoute><SeriesWatch /></ProtectedRoute>} />
           <Route path="/links" element={<ProtectedRoute><Links /></ProtectedRoute>} />
+          
+          {/* Redirect old login/register to new auth page */}
+          <Route path="/login" element={<Navigate to="/auth" replace />} />
+          <Route path="/register" element={<Navigate to="/auth" replace />} />
         </Routes>
       </main>
-      <Footer />
+      {!isAuthPage && <Footer />}
     </div>
   )
 }
