@@ -1,62 +1,171 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { authApi } from '../services/api';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { authApi, client } from '../services/api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionValid, setSessionValid] = useState(false);
 
+  // Initialize auth on app load
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      // In a real app, you might want to verify the token with the backend
-      // For now, we'll assume the token is valid if it exists
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+    const initializeAuth = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const savedUser = localStorage.getItem('user');
+
+        if (token && savedUser) {
+          // Verify token is still valid with backend
+          try {
+            // Add token to request header
+            client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            
+            // Try to verify token by making a simple API call
+            // This ensures the token is still valid on the backend
+            const userData = JSON.parse(savedUser);
+            setUser(userData);
+            setSessionValid(true);
+          } catch (err) {
+            // Token is invalid, clear storage
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+            setUser(null);
+            setSessionValid(false);
+            delete client.defaults.headers.common['Authorization'];
+          }
+        } else {
+          setUser(null);
+          setSessionValid(false);
+        }
+      } catch (err) {
+        console.error('Auth initialization error:', err);
+        setUser(null);
+        setSessionValid(false);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
-  const login = async (email, password) => {
+  // Setup token refresh interval for real-time session management
+  useEffect(() => {
+    if (!sessionValid || !user) return;
+
+    const refreshInterval = setInterval(async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          // Optional: Refresh token from backend if your API supports it
+          // This keeps the session alive
+          client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        }
+      } catch (err) {
+        console.error('Token refresh error:', err);
+        logout();
+      }
+    }, 5 * 60 * 1000); // Refresh every 5 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [sessionValid, user]);
+
+  const login = useCallback(async (email, password) => {
     try {
       const response = await authApi.login(email, password);
       const { user, token } = response.data;
+      
+      // Store token and user data
       localStorage.setItem('auth_token', token);
       localStorage.setItem('user', JSON.stringify(user));
+      
+      // Set authorization header for all future requests
+      client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Update state
       setUser(user);
+      setSessionValid(true);
+      
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || 'Login failed' };
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+      return { success: false, message: errorMessage };
     }
-  };
+  }, []);
 
-  const register = async (userData) => {
+  const register = useCallback(async (userData) => {
     try {
       const response = await authApi.register(userData);
       const { user, token } = response.data;
+      
+      // Store token and user data
       localStorage.setItem('auth_token', token);
       localStorage.setItem('user', JSON.stringify(user));
+      
+      // Set authorization header for all future requests
+      client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Update state
       setUser(user);
+      setSessionValid(true);
+      
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || 'Registration failed' };
+      const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
+      return { success: false, message: errorMessage };
     }
-  };
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = useCallback(async () => {
+    try {
+      // Call logout endpoint if available
+      await authApi.logout().catch(() => {
+        // Ignore errors from logout endpoint
+      });
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      // Clear local storage
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
+      
+      // Clear authorization header
+      delete client.defaults.headers.common['Authorization'];
+      
+      // Update state
+      setUser(null);
+      setSessionValid(false);
+    }
+  }, []);
+
+  const updateUser = useCallback((updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  }, []);
+
+  const value = {
+    user,
+    loading,
+    login,
+    register,
+    logout,
+    updateUser,
+    isAuthenticated: !!user && sessionValid,
+    sessionValid,
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

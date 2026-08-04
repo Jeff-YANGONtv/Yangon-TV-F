@@ -13,6 +13,7 @@ import MovieWatch from './pages/MovieWatch'
 import SeriesWatch from './pages/SeriesWatch'
 import AuthPage from './pages/AuthPage'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { useAuthEvents } from './hooks/useAuthEvents'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -26,7 +27,16 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
   
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   
   if (!isAuthenticated) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
@@ -35,9 +45,32 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const PublicAuthRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If already authenticated, redirect to home
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
+
 function AppContent() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
+  useAuthEvents(); // Listen for real-time auth events
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f5]">
@@ -45,12 +78,12 @@ function AppContent() {
       {!isAuthPage && <Navbar />}
       <main className={!isAuthPage ? "min-h-[calc(100vh-200px)]" : ""}>
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/about" element={<About />} />
+          {/* Auth Route - Only accessible without login */}
+          <Route path="/auth" element={<PublicAuthRoute><AuthPage /></PublicAuthRoute>} />
           
-          {/* Protected Routes */}
+          {/* Protected Routes - All other routes require authentication */}
+          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
           <Route path="/movies" element={<ProtectedRoute><Movies /></ProtectedRoute>} />
           <Route path="/movies/:slug" element={<ProtectedRoute><MovieDetail /></ProtectedRoute>} />
           <Route path="/movies/:slug/watch" element={<ProtectedRoute><MovieWatch /></ProtectedRoute>} />
@@ -62,6 +95,9 @@ function AppContent() {
           {/* Redirect old login/register to new auth page */}
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           <Route path="/register" element={<Navigate to="/auth" replace />} />
+          
+          {/* Catch all - redirect to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       {!isAuthPage && <Footer />}
