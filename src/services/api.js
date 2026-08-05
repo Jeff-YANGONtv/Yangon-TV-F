@@ -124,4 +124,5 @@ client.interceptors.response.use(
   }
 );
 
-export { client as default };
+export { client };
+export default client;
