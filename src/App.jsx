@@ -1,5 +1,6 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
+// Deployment: 2026-08-05 23:55:00
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
