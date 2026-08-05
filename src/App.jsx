@@ -78,19 +78,21 @@ function AppContent() {
       {!isAuthPage && <Navbar />}
       <main className={!isAuthPage ? "min-h-[calc(100vh-200px)]" : ""}>
         <Routes>
+          {/* Public Routes - No authentication required */}
+          <Route path="/" element={<Home />} />
+          <Route path="/movies" element={<Movies />} />
+          <Route path="/movies/:slug" element={<MovieDetail />} />
+          <Route path="/series" element={<Shows />} />
+          <Route path="/series/:slug" element={<SeriesDetail />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/links" element={<Links />} />
+          
           {/* Auth Route - Only accessible without login */}
           <Route path="/auth" element={<PublicAuthRoute><AuthPage /></PublicAuthRoute>} />
           
-          {/* Protected Routes - All other routes require authentication */}
-          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-          <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
-          <Route path="/movies" element={<ProtectedRoute><Movies /></ProtectedRoute>} />
-          <Route path="/movies/:slug" element={<ProtectedRoute><MovieDetail /></ProtectedRoute>} />
+          {/* Protected Routes - Require authentication */}
           <Route path="/movies/:slug/watch" element={<ProtectedRoute><MovieWatch /></ProtectedRoute>} />
-          <Route path="/series" element={<ProtectedRoute><Shows /></ProtectedRoute>} />
-          <Route path="/series/:slug" element={<ProtectedRoute><SeriesDetail /></ProtectedRoute>} />
           <Route path="/series/:slug/watch" element={<ProtectedRoute><SeriesWatch /></ProtectedRoute>} />
-          <Route path="/links" element={<ProtectedRoute><Links /></ProtectedRoute>} />
           
           {/* Redirect old login/register to new auth page */}
           <Route path="/login" element={<Navigate to="/auth" replace />} />
