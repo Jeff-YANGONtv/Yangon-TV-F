@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaBell, FaTimes, FaExternalLinkAlt, FaInfoCircle, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import echo from '../utils/echo';
 import axios from 'axios';
@@ -8,32 +8,54 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://khaki-yak-457838.
 export default function NotificationDisplay() {
   const [notifications, setNotifications] = useState([]);
   const [closedIds, setClosedIds] = useState([]);
+  const lastFetchedIds = useRef(new Set());
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/public/notifications`);
+      if (Array.isArray(res.data)) {
+        const newNotifications = res.data;
+        setNotifications(prev => {
+          // Merge new notifications with existing ones, avoiding duplicates
+          const existingIds = new Set(prev.map(n => n.id));
+          const filteredNew = newNotifications.filter(n => !existingIds.has(n.id));
+          return [...filteredNew, ...prev];
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch notifications', err);
+    }
+  };
 
   useEffect(() => {
     // 1. Initial fetch
-    const fetchNotifications = async () => {
-      try {
-        const res = await axios.get(`${API_BASE}/public/notifications`);
-        if (Array.isArray(res.data)) {
-          setNotifications(res.data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch notifications', err);
-      }
-    };
     fetchNotifications();
 
-    // 2. Listen for real-time updates
-    const channel = echo.channel('notifications-channel');
-    channel.listen('.NotificationBroadcasted', (data) => {
-      console.log('New notification received:', data);
-      if (data.notification) {
-        setNotifications(prev => [data.notification, ...prev]);
-      }
-    });
+    // 2. Setup Polling (fallback)
+    const pollingInterval = setInterval(fetchNotifications, 60000); // Poll every 60 seconds
+
+    // 3. Listen for real-time updates (WebSocket)
+    let channel;
+    try {
+      channel = echo.channel('notifications-channel');
+      channel.listen('.NotificationBroadcasted', (data) => {
+        console.log('New notification received via WebSocket:', data);
+        if (data.notification) {
+          setNotifications(prev => {
+            if (prev.some(n => n.id === data.notification.id)) return prev;
+            return [data.notification, ...prev];
+          });
+        }
+      });
+    } catch (err) {
+      console.warn('WebSocket connection failed, relying on polling:', err);
+    }
 
     return () => {
-      channel.stopListening('.NotificationBroadcasted');
+      clearInterval(pollingInterval);
+      if (channel) {
+        channel.stopListening('.NotificationBroadcasted');
+      }
     };
   }, []);
 

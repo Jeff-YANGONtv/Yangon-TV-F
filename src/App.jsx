@@ -11,6 +11,7 @@ import About from './pages/About'
 import Links from './pages/Links'
 import MovieWatch from './pages/MovieWatch'
 import SeriesWatch from './pages/SeriesWatch'
+import AuthModal from './components/AuthModal'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { useAuthEvents } from './hooks/useAuthEvents'
 import NotificationDisplay from './components/NotificationDisplay'
@@ -24,9 +25,15 @@ function ScrollToTop() {
 }
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, openAuthModal } = useAuth();
   const location = useLocation();
   
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      openAuthModal();
+    }
+  }, [loading, isAuthenticated, openAuthModal]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
@@ -39,14 +46,24 @@ const ProtectedRoute = ({ children }) => {
   }
   
   if (!isAuthenticated) {
-    return <Navigate to="/" state={{ from: location, showAuth: true }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
   
   return children;
 };
 
 function AppContent() {
-  useAuthEvents(); // Listen for real-time auth events
+  const { isAuthModalOpen, closeAuthModal, openAuthModal } = useAuth();
+  const location = useLocation();
+  useAuthEvents();
+
+  useEffect(() => {
+    if (location.state?.showAuth) {
+      openAuthModal();
+      // Clear state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, openAuthModal]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f5]">
@@ -54,7 +71,6 @@ function AppContent() {
       <Navbar />
       <main className="min-h-[calc(100vh-200px)]">
         <Routes>
-          {/* Public Routes - No authentication required */}
           <Route path="/" element={<Home />} />
           <Route path="/movies" element={<Movies />} />
           <Route path="/movies/:slug" element={<MovieDetail />} />
@@ -63,21 +79,19 @@ function AppContent() {
           <Route path="/about" element={<About />} />
           <Route path="/links" element={<Links />} />
           
-          {/* Protected Routes - Require authentication */}
           <Route path="/movies/:slug/watch" element={<ProtectedRoute><MovieWatch /></ProtectedRoute>} />
           <Route path="/series/:slug/watch" element={<ProtectedRoute><SeriesWatch /></ProtectedRoute>} />
           
-          {/* Redirect old auth pages to home with modal */}
           <Route path="/auth" element={<Navigate to="/" state={{ showAuth: true }} replace />} />
           <Route path="/login" element={<Navigate to="/" state={{ showAuth: true }} replace />} />
           <Route path="/register" element={<Navigate to="/" state={{ showAuth: true }} replace />} />
           
-          {/* Catch all - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       <Footer />
       <NotificationDisplay />
+      <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
     </div>
   )
 }

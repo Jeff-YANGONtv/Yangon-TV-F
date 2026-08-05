@@ -1,19 +1,21 @@
-import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export const useAuthCheck = () => {
-  const { isAuthenticated } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { isAuthenticated, openAuthModal, isAuthModalOpen, closeAuthModal } = useAuth();
 
   const checkAuth = (callback) => {
     if (isAuthenticated) {
       if (callback) callback();
       return true;
     } else {
-      setShowAuthModal(true);
+      openAuthModal();
       return false;
     }
   };
 
-  return { checkAuth, showAuthModal, setShowAuthModal };
+  return { 
+    checkAuth, 
+    showAuthModal: isAuthModalOpen, 
+    setShowAuthModal: (val) => val ? openAuthModal() : closeAuthModal() 
+  };
 };

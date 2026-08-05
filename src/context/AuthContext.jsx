@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sessionValid, setSessionValid] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Initialize auth on app load
   useEffect(() => {
@@ -150,6 +151,9 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     isAuthenticated: !!user && sessionValid,
     sessionValid,
+    isAuthModalOpen,
+    openAuthModal: () => setIsAuthModalOpen(true),
+    closeAuthModal: () => setIsAuthModalOpen(false),
   };
 
   return (

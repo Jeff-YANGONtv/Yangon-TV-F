@@ -8,21 +8,12 @@ import MovieCard from '../components/MovieCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
 import { useAuthCheck } from '../hooks/useAuthCheck';
-import AuthModal from '../components/AuthModal';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function Home() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { checkAuth, showAuthModal, setShowAuthModal } = useAuthCheck();
+  const { checkAuth } = useAuthCheck();
 
-  useEffect(() => {
-    if (location.state?.showAuth) {
-      setShowAuthModal(true);
-      // Clear state to avoid showing modal again on refresh
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state, setShowAuthModal]);
   const [recentMovies, setRecentMovies] = useState([]);
   const [popularMovies, setPopularMovies] = useState([]);
   const [popularSeries, setPopularSeries] = useState([]);
@@ -239,11 +230,6 @@ export default function Home() {
 
       {/* Bottom Ad Banner */}
       <AdBanner position="bottom" />
-
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
     </div>
   );
 }
