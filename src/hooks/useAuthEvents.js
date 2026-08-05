@@ -10,7 +10,9 @@ export const useAuthEvents = () => {
     // Listen for auth expiration events
     const handleAuthExpired = () => {
       logout();
-      navigate('/auth', { replace: true });
+      // Only navigate to /auth if we are on a protected page
+      // But since ProtectedRoute already handles this, we don't need to force it here.
+      // navigate('/auth', { replace: true });
     };
 
     // Listen for user update events
@@ -22,7 +24,7 @@ export const useAuthEvents = () => {
 
     // Listen for access denied events
     const handleAccessDenied = () => {
-      navigate('/auth', { replace: true });
+      // navigate('/auth', { replace: true });
     };
 
     window.addEventListener('authExpired', handleAuthExpired);

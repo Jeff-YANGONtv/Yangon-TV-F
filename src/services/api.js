@@ -110,10 +110,9 @@ client.interceptors.response.use(
       // Dispatch event for real-time logout
       window.dispatchEvent(new CustomEvent('authExpired'));
       
-      // Redirect to auth page
-      if (window.location.pathname !== '/auth') {
-        window.location.href = '/auth';
-      }
+      // DO NOT automatically redirect to /auth here. 
+      // Let ProtectedRoute handle the redirect only for protected pages.
+      // This allows public pages (Home, Details) to stay accessible even if the token is invalid/expired.
     }
     
     // Handle 403 Forbidden
