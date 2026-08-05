@@ -200,3 +200,32 @@ img {
 .mobile-menu-exit {
   animation: slide-out-right 0.3s ease-in;
 }
+
+/* ============ AUTH BACKGROUND SCROLL ============ */
+@keyframes scroll-y {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+@keyframes scroll-y-reverse {
+  0% { transform: translateY(-50%); }
+  100% { transform: translateY(0); }
+}
+
+.animate-scroll-y {
+  animation: scroll-y 40s linear infinite;
+}
+
+.animate-scroll-y-reverse {
+  animation: scroll-y-reverse 40s linear infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out 0s 2;
+}

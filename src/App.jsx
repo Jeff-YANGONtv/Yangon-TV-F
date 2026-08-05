@@ -75,8 +75,8 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f5]">
       <ScrollToTop />
-      {!isAuthPage && <Navbar />}
-      <main className={!isAuthPage ? "min-h-[calc(100vh-200px)]" : ""}>
+      <Navbar />
+      <main className="min-h-[calc(100vh-200px)]">
         <Routes>
           {/* Public Routes - No authentication required */}
           <Route path="/" element={<Home />} />
@@ -102,7 +102,7 @@ function AppContent() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      {!isAuthPage && <Footer />}
+      <Footer />
     </div>
   )
 }

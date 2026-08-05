@@ -1,21 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { resolveMediaUrl } from '../services/api';
 import { toSlugWithId } from '../utils/slug';
-import { useAuthCheck } from '../hooks/useAuthCheck';
-import AuthModal from './AuthModal';
-
 export default function MovieCard({ item, type = 'movie' }) {
   const navigate = useNavigate();
-  const { checkAuth, showAuthModal, setShowAuthModal } = useAuthCheck();
   
   const slug = item.slug || toSlugWithId(item.name || item.title, item.id);
   const linkTo = type === 'series' ? `/series/${slug}` : `/movies/${slug}`;
 
   const handleClick = (e) => {
     e.preventDefault();
-    checkAuth(() => {
-      navigate(linkTo);
-    });
+    navigate(linkTo);
   };
 
   return (
@@ -61,10 +55,6 @@ export default function MovieCard({ item, type = 'movie' }) {
         </div>
       </div>
 
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
     </>
   );
 }

@@ -16,14 +16,11 @@ export const AuthProvider = ({ children }) => {
         const savedUser = localStorage.getItem('user');
 
         if (token && savedUser) {
-          // Verify token is still valid with backend
           try {
-            // Add token to request header
             client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            
-            // Try to verify token by making a simple API call
-            // This ensures the token is still valid on the backend
-            const userData = JSON.parse(savedUser);
+            // Call verify endpoint to check if token is still valid on backend
+            const response = await authApi.verify();
+            const userData = response.data.user || JSON.parse(savedUser);
             setUser(userData);
             setSessionValid(true);
           } catch (err) {

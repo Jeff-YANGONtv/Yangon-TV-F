@@ -98,21 +98,30 @@ export default function AuthPage() {
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
       {/* Animated Background of Movie Posters */}
-      <div className="absolute inset-0 z-0 opacity-30 pointer-events-none">
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 animate-pulse">
-          {posters.length > 0 ? (
-            posters.map((url, i) => (
-              <div key={i} className="aspect-[2/3] overflow-hidden rounded-sm">
-                <img src={url} alt="" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
-              </div>
-            ))
-          ) : (
-            Array(24).fill(0).map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-gray-900 animate-pulse rounded-sm" />
-            ))
-          )}
+      <div className="absolute inset-0 z-0 opacity-20 pointer-events-none overflow-hidden">
+        <div className="flex gap-4 animate-scroll-vertical">
+          <div className="flex flex-col gap-4 animate-scroll-y">
+            {[...posters, ...posters].map((url, i) => (
+              <img key={i} src={url} alt="" className="w-32 sm:w-48 aspect-[2/3] object-cover rounded-lg grayscale" />
+            ))}
+          </div>
+          <div className="flex flex-col gap-4 animate-scroll-y-reverse mt-[-50%]">
+            {[...posters, ...posters].map((url, i) => (
+              <img key={i} src={url} alt="" className="w-32 sm:w-48 aspect-[2/3] object-cover rounded-lg grayscale" />
+            ))}
+          </div>
+          <div className="hidden md:flex flex-col gap-4 animate-scroll-y">
+            {[...posters, ...posters].map((url, i) => (
+              <img key={i} src={url} alt="" className="w-32 sm:w-48 aspect-[2/3] object-cover rounded-lg grayscale" />
+            ))}
+          </div>
+          <div className="hidden lg:flex flex-col gap-4 animate-scroll-y-reverse mt-[-30%]">
+            {[...posters, ...posters].map((url, i) => (
+              <img key={i} src={url} alt="" className="w-32 sm:w-48 aspect-[2/3] object-cover rounded-lg grayscale" />
+            ))}
+          </div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black" />
       </div>
 
       {/* Auth Container */}
@@ -224,9 +233,17 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-3d py-3 flex items-center justify-center gap-2"
+              className="w-full btn-3d py-3.5 flex items-center justify-center gap-2 text-base font-bold tracking-wide"
             >
               {loading ? <FaSpinner className="animate-spin" size={20} /> : (isLogin ? 'အကောင့်ဝင်မယ်' : 'အကောင့်ဖွင့်မယ်')}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="w-full py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors font-medium"
+            >
+              ပယ်ဖျက်မည်
             </button>
           </form>
 
