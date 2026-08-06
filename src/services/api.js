@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://khaki-yak-457838.hostingersite.com/api';
-const MEDIA_BASE = import.meta.env.VITE_MEDIA_BASE_URL || 'https://khaki-yak-457838.hostingersite.com';
+const API_BASE = 'https://khaki-yak-457838.hostingersite.com/api';
+const MEDIA_BASE = 'https://khaki-yak-457838.hostingersite.com';
 
 const client = axios.create({
   baseURL: API_BASE,
@@ -19,52 +19,135 @@ export function resolveMediaUrl(path) {
 // Unwrap { success, data } envelope; throws on success=false
 const unwrap = (res) => {
   const body = res.data;
-  if (body?.success === false) {
-    throw new Error(body.message || 'API returned success=false');
+  if (body && typeof body === 'object' && 'success' in body) {
+    if (!body.success) {
+      throw new Error(body.message || 'API request failed');
+    }
+    return body.data;
   }
   return body;
 };
 
-// --- Movies ---
 export const moviesApi = {
-  list: (page = 1) => client.get('/movies', { params: { page: page } }).then(unwrap),
-  detail: (id) => client.get(`/movies/${id}`).then(unwrap),
-  bySlug: (slug) => client.get(`/movies/slug/${slug}`).then(unwrap),
-  search: (query) => client.get('/movies/search', { params: { query: query } }).then(unwrap),
-  filter: (params) => client.get('/movies/filter', { params }).then(unwrap),
+  list: async (page = 1) => {
+    const res = await client.get(`/movies`, { params: { page } });
+    return unwrap(res);
+  },
+  search: async (query) => {
+    const res = await client.get(`/movies/search`, { params: { q: query } });
+    return unwrap(res);
+  },
+  get: async (id) => {
+    const res = await client.get(`/movies/${id}`);
+    return unwrap(res);
+  },
+  getBySlug: async (slug) => {
+    const res = await client.get(`/movies/slug/${slug}`);
+    return unwrap(res);
+  },
 };
 
-// --- Shows / Series ---
-export const showsApi = {
-  list: (page = 1) => client.get('/shows', { params: { page: page } }).then(unwrap),
-  detail: (id) => client.get(`/shows/${id}`).then(unwrap),
-  bySlug: (slug) => client.get(`/shows/slug/${slug}`).then(unwrap),
-  search: (query) => client.get('/shows/search', { params: { query: query } }).then(unwrap),
-  filter: (params) => client.get('/shows/filter', { params }).then(unwrap),
-};
-
-// --- Movies (sorted by views/date) ---
 export const sortedMoviesApi = {
-  list: (page = 1, sortBy = 'views', sortOrder = 'desc') =>
-    client.get('/movies/paginate-sorted', { params: { page: page, sort_by: sortBy, sort_order: sortOrder, per_page: 20 } }).then(unwrap),
+  list: async (page = 1, sortBy = 'release_date', sortOrder = 'desc') => {
+    const res = await client.get(`/movies/paginate-sorted`, {
+      params: { page, sort_by: sortBy, sort_order: sortOrder },
+    });
+    return unwrap(res);
+  },
 };
 
-// --- Genres ---
+export const showsApi = {
+  list: async (page = 1) => {
+    const res = await client.get(`/shows`, { params: { page } });
+    return unwrap(res);
+  },
+  search: async (query) => {
+    const res = await client.get(`/shows/search`, { params: { q: query } });
+    return unwrap(res);
+  },
+  get: async (id) => {
+    const res = await client.get(`/shows/${id}`);
+    return unwrap(res);
+  },
+  getBySlug: async (slug) => {
+    const res = await client.get(`/shows/slug/${slug}`);
+    return unwrap(res);
+  },
+};
+
+export const sortedShowsApi = {
+  list: async (page = 1, sortBy = 'release_date', sortOrder = 'desc') => {
+    const res = await client.get(`/shows/paginate-sorted`, {
+      params: { page, sort_by: sortBy, sort_order: sortOrder },
+    });
+    return unwrap(res);
+  },
+};
+
+export const seasonsApi = {
+  getByShow: async (showId) => {
+    const res = await client.get(`/shows/${showId}/seasons`);
+    return unwrap(res);
+  },
+  get: async (id) => {
+    const res = await client.get(`/seasons/${id}`);
+    return unwrap(res);
+  },
+};
+
+export const episodesApi = {
+  getBySeason: async (seasonId) => {
+    const res = await client.get(`/seasons/${seasonId}/episodes`);
+    return unwrap(res);
+  },
+  get: async (id) => {
+    const res = await client.get(`/episodes/${id}`);
+    return unwrap(res);
+  },
+};
+
 export const genresApi = {
-  list: () => client.get('/genres').then(unwrap).catch(() => ({ success: true, data: [] })),
+  list: async () => {
+    try {
+      const res = await client.get(`/genres`);
+      return unwrap(res);
+    } catch {
+      return [];
+    }
+  },
 };
 
-// --- Ads ---
 export const adsApi = {
-  list: (params = {}) => client.get('/ads', { params }).then(unwrap),
-  byPosition: (position) => client.get('/ads', { params: { position } }).then(unwrap),
-  byType: (type) => client.get('/ads', { params: { type } }).then(unwrap),
+  list: async () => {
+    try {
+      const res = await client.get(`/ads`);
+      return unwrap(res);
+    } catch {
+      return [];
+    }
+  },
 };
 
-// --- Socials ---
 export const socialsApi = {
-  list: () => client.get('/socials').then(unwrap),
+  list: async () => {
+    try {
+      const res = await client.get(`/socials`);
+      return unwrap(res);
+    } catch {
+      return [];
+    }
+  },
 };
 
-export { client };
+export const notificationsApi = {
+  publicList: async () => {
+    try {
+      const res = await client.get(`/public/notifications`);
+      return unwrap(res);
+    } catch {
+      return [];
+    }
+  },
+};
+
 export default client;
