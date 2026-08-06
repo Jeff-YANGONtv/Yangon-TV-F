@@ -6,7 +6,10 @@ const MEDIA_BASE = 'https://khaki-yak-457838.hostingersite.com';
 const client = axios.create({
   baseURL: API_BASE,
   timeout: 15000,
-  headers: { 'Accept': 'application/json' },
+  headers: { 
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  },
 });
 
 // Resolve relative media paths to absolute URLs
