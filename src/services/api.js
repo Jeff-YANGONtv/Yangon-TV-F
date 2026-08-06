@@ -154,3 +154,18 @@ export const notificationsApi = {
 };
 
 export default client;
+
+export const blogsApi = {
+  list: async (page = 1, search = '') => {
+    try {
+      const res = await client.get(`/public/blogs`, { params: { page, search } });
+      return unwrap(res);
+    } catch {
+      return { data: [], current_page: 1, last_page: 1 };
+    }
+  },
+  getBySlug: async (slug) => {
+    const res = await client.get(`/public/blogs/${slug}`);
+    return unwrap(res);
+  },
+};
