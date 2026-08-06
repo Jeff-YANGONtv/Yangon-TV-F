@@ -31,9 +31,19 @@ export default function Home() {
           sortedMoviesApi.list(1, 'views', 'desc'),
           showsApi.list(1),
         ]);
-        setRecentMovies(recentRes.data || recentRes.items || []);
-        setPopularMovies(popularRes.data || popularRes.items || []);
-        setPopularSeries(seriesRes.data || seriesRes.items || []);
+        
+        // Handle various response shapes robustly
+        const extractItems = (res) => {
+          if (!res) return [];
+          if (Array.isArray(res)) return res;
+          if (Array.isArray(res.data)) return res.data;
+          if (Array.isArray(res.items)) return res.items;
+          return [];
+        };
+
+        setRecentMovies(extractItems(recentRes));
+        setPopularMovies(extractItems(popularRes));
+        setPopularSeries(extractItems(seriesRes));
         setError(null);
       } catch (err) {
         console.error('Failed to fetch home content:', err);
