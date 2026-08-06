@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { moviesApi } from '../services/api';
+import { moviesApi, sortedMoviesApi } from '../services/api';
 import MovieCard from '../components/MovieCard';
 import AdBanner from '../components/AdBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
 
-const PER_PAGE = 12;
+const PER_PAGE = 20;
 
 export default function Movies() {
   const [movies, setMovies] = useState([]);
@@ -26,13 +26,14 @@ export default function Movies() {
       if (searchQuery.trim()) {
         res = await moviesApi.search(searchQuery.trim());
       } else {
-        res = await moviesApi.list(page);
+        res = await sortedMoviesApi.list(page, 'release_date', 'desc');
       }
-      const items = res.data || [];
+      const items = res.data || res.items || [];
       setMovies(items);
       setTotalPages(res.last_page || 1);
       setTotalCount(res.total || items.length);
     } catch (err) {
+      console.error('Failed to fetch movies:', err);
       setError(err);
     } finally {
       setLoading(false);
