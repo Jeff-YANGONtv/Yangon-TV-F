@@ -27,13 +27,13 @@ export default function Home() {
       try {
         if (showLoader) setLoading(true);
         const [recentRes, popularRes, seriesRes] = await Promise.all([
-          moviesApi.list(1),
+          sortedMoviesApi.list(1, 'release_date', 'desc'),
           sortedMoviesApi.list(1, 'views', 'desc'),
           showsApi.list(1),
         ]);
-        setRecentMovies(recentRes.data || []);
-        setPopularMovies(popularRes.data || []);
-        setPopularSeries(seriesRes.data || []);
+        setRecentMovies(recentRes.data || recentRes.items || []);
+        setPopularMovies(popularRes.data || popularRes.items || []);
+        setPopularSeries(seriesRes.data || seriesRes.items || []);
         setError(null);
       } catch (err) {
         console.error('Failed to fetch home content:', err);
