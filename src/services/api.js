@@ -27,7 +27,7 @@ const unwrap = (res) => {
 
 // --- Movies ---
 export const moviesApi = {
-  list: (page = 1) => client.get('/movies', { params: { p: page } }).then(unwrap),
+  list: (page = 1) => client.get('/movies', { params: { page: page } }).then(unwrap),
   detail: (id) => client.get(`/movies/${id}`).then(unwrap),
   bySlug: (slug) => client.get(`/movies/slug/${slug}`).then(unwrap),
   search: (query) => client.get('/movies/search', { params: { query: query } }).then(unwrap),
@@ -36,7 +36,7 @@ export const moviesApi = {
 
 // --- Shows / Series ---
 export const showsApi = {
-  list: (page = 1) => client.get('/shows', { params: { p: page } }).then(unwrap),
+  list: (page = 1) => client.get('/shows', { params: { page: page } }).then(unwrap),
   detail: (id) => client.get(`/shows/${id}`).then(unwrap),
   bySlug: (slug) => client.get(`/shows/slug/${slug}`).then(unwrap),
   search: (query) => client.get('/shows/search', { params: { query: query } }).then(unwrap),
@@ -46,7 +46,7 @@ export const showsApi = {
 // --- Movies (sorted by views/date) ---
 export const sortedMoviesApi = {
   list: (page = 1, sortBy = 'views', sortOrder = 'desc') =>
-    client.get('/movies/paginate-sorted', { params: { p: page, sort_by: sortBy, sort_order: sortOrder, per_page: 20 } }).then(unwrap),
+    client.get('/movies/paginate-sorted', { params: { page: page, sort_by: sortBy, sort_order: sortOrder, per_page: 20 } }).then(unwrap),
 };
 
 // --- Genres ---
