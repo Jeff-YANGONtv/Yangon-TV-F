@@ -1,14 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaHome, FaFilm, FaTv, FaInfoCircle, FaLink, FaBars, FaTimes, FaUser, FaSignOutAlt, FaSignInAlt } from 'react-icons/fa';
-import { useAuth } from '../context/AuthContext';
+import { FaHome, FaFilm, FaTv, FaInfoCircle, FaLink, FaBars, FaTimes } from 'react-icons/fa';
 
 export default function Navbar() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { user, logout, isAuthenticated, openAuthModal } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const navItems = [
     { path: '/', icon: FaHome, label: 'Home' },
@@ -22,12 +18,6 @@ export default function Navbar() {
 
   const handleNavClick = () => {
     setMobileMenuOpen(false);
-  };
-
-  const handleLogout = () => {
-    logout();
-    setProfileDropdownOpen(false);
-    navigate('/');
   };
 
   return (
@@ -59,44 +49,8 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Auth Section */}
+        {/* Menu Section */}
         <div className="flex items-center gap-4">
-          {isAuthenticated ? (
-            <div className="relative">
-              <button
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-2 p-2 px-3 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-all hover:bg-white/10"
-              >
-                <FaUser size={18} />
-                <span className="hidden sm:inline text-sm font-medium">{user.name}</span>
-              </button>
-
-              {profileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 glass-morphism-dark rounded-xl shadow-2xl py-2 z-50 border border-white/10 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="px-4 py-2 border-b border-white/5 mb-2">
-                    <p className="text-xs text-gray-500">Signed in as</p>
-                    <p className="text-sm font-semibold text-white truncate">{user.email}</p>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
-                  >
-                    <FaSignOutAlt size={16} />
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <button
-              onClick={openAuthModal}
-              className="btn-3d flex items-center gap-2 !py-2 !px-4"
-            >
-              <FaSignInAlt size={18} />
-              <span className="hidden sm:inline text-sm font-bold">Sign In</span>
-            </button>
-          )}
-
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -127,16 +81,6 @@ export default function Navbar() {
                 <span className="font-medium">{label}</span>
               </Link>
             ))}
-            
-            {isAuthenticated && (
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-all"
-              >
-                <FaSignOutAlt size={20} />
-                <span className="font-medium">Logout</span>
-              </button>
-            )}
           </div>
         </div>
       )}

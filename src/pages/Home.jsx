@@ -7,12 +7,10 @@ import AdSlider from '../components/AdSlider';
 import MovieCard from '../components/MovieCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
-import { useAuthCheck } from '../hooks/useAuthCheck';
 import { useNavigate } from 'react-router-dom';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { checkAuth } = useAuthCheck();
 
   const [recentMovies, setRecentMovies] = useState([]);
   const [popularMovies, setPopularMovies] = useState([]);
@@ -110,7 +108,7 @@ export default function Home() {
                 <button
                   onClick={() => {
                     const slug = featured.slug || toSlugWithId(featured.name, featured.id);
-                    checkAuth(() => navigate(`/movies/${slug}`));
+                    navigate(`/movies/${slug}`);
                   }}
                   className="btn-3d inline-flex text-xs sm:text-sm px-4 sm:px-5 py-2"
                 >
