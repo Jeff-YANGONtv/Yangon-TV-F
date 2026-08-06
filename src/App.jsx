@@ -16,6 +16,7 @@ import AuthModal from './components/AuthModal'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { useAuthEvents } from './hooks/useAuthEvents'
 import NotificationDisplay from './components/NotificationDisplay'
+import { NotificationProvider } from './context/NotificationContext'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -100,7 +101,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
     </AuthProvider>
   )
 }
