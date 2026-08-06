@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaHome, FaFilm, FaTv, FaInfoCircle, FaLink, FaBars, FaTimes } from 'react-icons/fa';
+import { FaHome, FaFilm, FaTv, FaInfoCircle, FaLink, FaBlog, FaBars, FaTimes } from 'react-icons/fa';
 
 export default function Navbar() {
   const location = useLocation();
@@ -11,6 +11,7 @@ export default function Navbar() {
     { path: '/movies', icon: FaFilm, label: 'Movies' },
     { path: '/series', icon: FaTv, label: 'Series' },
     { path: '/links', icon: FaLink, label: 'Links' },
+    { path: '/blog', icon: FaBlog, label: 'Blog' },
     { path: '/about', icon: FaInfoCircle, label: 'About Us' },
   ];
 

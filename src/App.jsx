@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
-// Deployment: 2026-08-05 23:55:00
+// Deployment: 2026-08-07 05:00:00
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
@@ -12,6 +12,8 @@ import About from './pages/About'
 import Links from './pages/Links'
 import MovieWatch from './pages/MovieWatch'
 import SeriesWatch from './pages/SeriesWatch'
+import BlogList from './pages/BlogList'
+import BlogDetail from './pages/BlogDetail'
 import NotificationDisplay from './components/NotificationDisplay'
 
 function ScrollToTop() {
@@ -36,6 +38,8 @@ function AppContent() {
           <Route path="/series/:slug" element={<SeriesDetail />} />
           <Route path="/about" element={<About />} />
           <Route path="/links" element={<Links />} />
+          <Route path="/blog" element={<BlogList />} />
+          <Route path="/blog/:slug" element={<BlogDetail />} />
           
           <Route path="/movies/:slug/watch" element={<MovieWatch />} />
           <Route path="/series/:slug/watch" element={<SeriesWatch />} />
