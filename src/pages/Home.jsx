@@ -8,6 +8,7 @@ import MovieCard from '../components/MovieCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ErrorMessage from '../components/ErrorMessage';
 import { useNavigate } from 'react-router-dom';
+import echo from '../utils/echo';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -22,9 +23,9 @@ export default function Home() {
   const [sliderIndex, setSliderIndex] = useState(0);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchData(showLoader = true) {
       try {
-        setLoading(true);
+        if (showLoader) setLoading(true);
         const [recentRes, popularRes, seriesRes] = await Promise.all([
           moviesApi.list(1),
           sortedMoviesApi.list(1, 'views', 'desc'),
@@ -36,10 +37,89 @@ export default function Home() {
       } catch (err) {
         setError(err);
       } finally {
-        setLoading(false);
+        if (showLoader) setLoading(false);
       }
     }
-    fetchData();
+
+    // Initial fetch with loader
+    fetchData(true);
+
+    // Setup real-time event listeners for panel additions/updates without page refresh
+    let moviesChannel, showsChannel, contentChannel;
+    try {
+      moviesChannel = echo.channel('movies-channel') || echo.channel('movies');
+      if (moviesChannel) {
+        moviesChannel.listen('.MovieAdded', (data) => {
+          console.log('Real-time event: Movie added', data);
+          fetchData(false);
+        });
+        moviesChannel.listen('.MovieUpdated', (data) => {
+          console.log('Real-time event: Movie updated', data);
+          fetchData(false);
+        });
+        moviesChannel.listen('.MovieBroadcasted', (data) => {
+          console.log('Real-time event: Movie broadcasted', data);
+          fetchData(false);
+        });
+      }
+
+      showsChannel = echo.channel('shows-channel') || echo.channel('shows');
+      if (showsChannel) {
+        showsChannel.listen('.ShowAdded', (data) => {
+          console.log('Real-time event: Show added', data);
+          fetchData(false);
+        });
+        showsChannel.listen('.ShowUpdated', (data) => {
+          console.log('Real-time event: Show updated', data);
+          fetchData(false);
+        });
+        showsChannel.listen('.ShowBroadcasted', (data) => {
+          console.log('Real-time event: Show broadcasted', data);
+          fetchData(false);
+        });
+      }
+
+      contentChannel = echo.channel('content-channel') || echo.channel('content');
+      if (contentChannel) {
+        contentChannel.listen('.ContentUpdated', (data) => {
+          console.log('Real-time event: Content updated', data);
+          fetchData(false);
+        });
+        contentChannel.listen('.DataUpdated', (data) => {
+          console.log('Real-time event: Data updated', data);
+          fetchData(false);
+        });
+      }
+    } catch (err) {
+      console.warn('Real-time WebSocket subscription initialization failed:', err);
+    }
+
+    // Background polling fallback every 45 seconds to ensure absolute consistency
+    const pollInterval = setInterval(() => {
+      fetchData(false);
+    }, 45000);
+
+    return () => {
+      clearInterval(pollInterval);
+      try {
+        if (moviesChannel) {
+          moviesChannel.stopListening('.MovieAdded');
+          moviesChannel.stopListening('.MovieUpdated');
+          moviesChannel.stopListening('.MovieBroadcasted');
+        }
+        if (showsChannel) {
+          showsChannel.stopListening('.ShowAdded');
+          showsChannel.stopListening('.ShowUpdated');
+          showsChannel.stopListening('.ShowBroadcasted');
+        }
+        if (contentChannel) {
+          contentChannel.stopListening('.ContentUpdated');
+          contentChannel.stopListening('.DataUpdated');
+        }
+      } catch (e) {
+        // ignore cleanup errors
+      }
+    };
   }, []);
 
   // Auto-advance slider
