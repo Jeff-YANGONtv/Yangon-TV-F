@@ -34,7 +34,9 @@ export default function Home() {
         setRecentMovies(recentRes.data || []);
         setPopularMovies(popularRes.data || []);
         setPopularSeries(seriesRes.data || []);
+        setError(null);
       } catch (err) {
+        console.error('Failed to fetch home content:', err);
         setError(err);
       } finally {
         if (showLoader) setLoading(false);
@@ -45,80 +47,39 @@ export default function Home() {
     fetchData(true);
 
     // Setup real-time event listeners for panel additions/updates without page refresh
-    let moviesChannel, showsChannel, contentChannel;
+    let channels = [];
     try {
-      moviesChannel = echo.channel('movies-channel') || echo.channel('movies');
-      if (moviesChannel) {
-        moviesChannel.listen('.MovieAdded', (data) => {
-          console.log('Real-time event: Movie added', data);
-          fetchData(false);
-        });
-        moviesChannel.listen('.MovieUpdated', (data) => {
-          console.log('Real-time event: Movie updated', data);
-          fetchData(false);
-        });
-        moviesChannel.listen('.MovieBroadcasted', (data) => {
-          console.log('Real-time event: Movie broadcasted', data);
-          fetchData(false);
-        });
-      }
-
-      showsChannel = echo.channel('shows-channel') || echo.channel('shows');
-      if (showsChannel) {
-        showsChannel.listen('.ShowAdded', (data) => {
-          console.log('Real-time event: Show added', data);
-          fetchData(false);
-        });
-        showsChannel.listen('.ShowUpdated', (data) => {
-          console.log('Real-time event: Show updated', data);
-          fetchData(false);
-        });
-        showsChannel.listen('.ShowBroadcasted', (data) => {
-          console.log('Real-time event: Show broadcasted', data);
-          fetchData(false);
-        });
-      }
-
-      contentChannel = echo.channel('content-channel') || echo.channel('content');
-      if (contentChannel) {
-        contentChannel.listen('.ContentUpdated', (data) => {
-          console.log('Real-time event: Content updated', data);
-          fetchData(false);
-        });
-        contentChannel.listen('.DataUpdated', (data) => {
-          console.log('Real-time event: Data updated', data);
-          fetchData(false);
-        });
-      }
+      const channelNames = ['movies-channel', 'movies', 'shows-channel', 'shows', 'content-channel', 'content', 'admin', 'posts', 'posts-channel'];
+      channelNames.forEach(name => {
+        const ch = echo.channel(name);
+        if (ch) {
+          channels.push(ch);
+          ['.MovieAdded', '.MovieUpdated', '.MovieBroadcasted', '.ShowAdded', '.ShowUpdated', '.ShowBroadcasted', '.ContentUpdated', '.DataUpdated', '.PostAdded', '.PostUpdated', 'MovieAdded', 'MovieUpdated', 'ShowAdded', 'ShowUpdated', 'ContentUpdated', 'DataUpdated', 'PostAdded', 'PostUpdated'].forEach(eventName => {
+            ch.listen(eventName, (data) => {
+              console.log(`Real-time event received on [${name}] event [${eventName}]:`, data);
+              fetchData(false);
+            });
+          });
+        }
+      });
     } catch (err) {
       console.warn('Real-time WebSocket subscription initialization failed:', err);
     }
 
-    // Background polling fallback every 45 seconds to ensure absolute consistency
+    // High frequency background polling (every 5 seconds) to guarantee panel posts appear instantly without refresh
     const pollInterval = setInterval(() => {
       fetchData(false);
-    }, 45000);
+    }, 5000);
 
     return () => {
       clearInterval(pollInterval);
-      try {
-        if (moviesChannel) {
-          moviesChannel.stopListening('.MovieAdded');
-          moviesChannel.stopListening('.MovieUpdated');
-          moviesChannel.stopListening('.MovieBroadcasted');
+      channels.forEach(ch => {
+        try {
+          ch.stopListening();
+        } catch (e) {
+          // ignore
         }
-        if (showsChannel) {
-          showsChannel.stopListening('.ShowAdded');
-          showsChannel.stopListening('.ShowUpdated');
-          showsChannel.stopListening('.ShowBroadcasted');
-        }
-        if (contentChannel) {
-          contentChannel.stopListening('.ContentUpdated');
-          contentChannel.stopListening('.DataUpdated');
-        }
-      } catch (e) {
-        // ignore cleanup errors
-      }
+      });
     };
   }, []);
 
@@ -131,7 +92,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [recentMovies.length]);
 
-  if (error) {
+  if (error && recentMovies.length === 0) {
     return <ErrorMessage message="Failed to load content" onRetry={() => window.location.reload()} />;
   }
 
@@ -160,7 +121,7 @@ export default function Home() {
           </Link>
         </div>
 
-        {loading ? (
+        {loading && recentMovies.length === 0 ? (
           <div className="animate-pulse">
             <div className="relative h-[250px] sm:h-[350px] md:h-[400px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl overflow-hidden" />
           </div>
@@ -255,7 +216,7 @@ export default function Home() {
           </Link>
         </div>
 
-        {loading ? (
+        {loading && popularMovies.length === 0 ? (
           <LoadingSkeleton type="grid" count={6} />
         ) : popularMovies.length === 0 ? (
           <p className="text-gray-500 text-center py-8">No movies available.</p>
@@ -291,7 +252,7 @@ export default function Home() {
           </Link>
         </div>
 
-        {loading ? (
+        {loading && popularSeries.length === 0 ? (
           <LoadingSkeleton type="grid" count={6} />
         ) : popularSeries.length === 0 ? (
           <p className="text-gray-500 text-center py-8">No series available.</p>
