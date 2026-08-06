@@ -51,7 +51,7 @@ export const sortedMoviesApi = {
 
 // --- Genres ---
 export const genresApi = {
-  list: () => client.get('/genres').then(unwrap),
+  list: () => client.get('/genres').then(unwrap).catch(() => ({ success: true, data: [] })),
 };
 
 // --- Ads ---
